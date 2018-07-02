@@ -1,5 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿//using System.Collections;
+//using System.Collections.Generic;
 using UnityEngine;
 
 public class Entity : MonoBehaviour {
@@ -22,10 +22,14 @@ public class Entity : MonoBehaviour {
     public int attackCount { get; set; }
     public int maxAttackNumber { get; set; }
 
+    public int moveTimer { get; set; }
     public int attackTimer { get; set; }
     public int stunTimer { get; set; }
     public int knockDownTimer { get; set; }
 
     public bool inAir { get; set; }
+    public bool isAttacking { get; set; }
+    public bool isKnockedDown { get; set; }
+    public float positionY { get; set; }
     #endregion
 }

@@ -34,7 +34,6 @@ public class Hero : Entity {
 
     float jumpPower;
     float jumpHeight;
-    int moveTimer;
     int jumptimer;
 
     #endregion
@@ -88,25 +87,30 @@ public class Hero : Entity {
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.tag == "Terrain" && inAir)
-        {
-            animator.SetBool("Landing", true);
-            animator.SetBool("Jumping", false);
-            inAir = false;
-            rigidBody.isKinematic = true;
-            jumptimer = 30;
-        }
+        animator.SetBool("Landing", true);
+        animator.SetBool("Jumping", false);
+        inAir = false;
+        rigidBody.isKinematic = true;
+        jumptimer = 30;
     }
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.gameObject.tag == "Terrain")
+        if (other.gameObject.tag == "Ground" && rigidBody.isKinematic)
         {
-            animator.SetBool("Landing", false);
-            animator.SetBool("Jumping", true);
-            if (inAir == false)
-                inAir = true;
             rigidBody.isKinematic = false;
+            animator.SetBool("Jumping", true);
+            animator.SetBool("Landing", false);
+        }
+    }
+
+    private void OnTriggerStay(Collider other)
+    {
+        if (other.gameObject.tag == "Ground" && !rigidBody.isKinematic)
+        {
+            rigidBody.isKinematic = true;
+            animator.SetBool("Jumping", false);
+            animator.SetBool("Landing", true);
         }
     }
 

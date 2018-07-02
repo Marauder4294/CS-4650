@@ -26,9 +26,15 @@ public class Zombie : Entity {
         entity = enemy.GetComponent<Entity>();
         hero = FindObjectOfType<Hero>();
 
+        positionY = enemy.transform.position.y;
+
         isActive = false;
         canMove = false;
+        isAttacking = false;
+        isKnockedDown = false;
         attackCount = 0;
+
+        moveTimer = 0;
         attackTimer = 0;
         stunTimer = 0;
 
@@ -49,13 +55,29 @@ public class Zombie : Entity {
 
     void Hunt(float moveX, float moveY)
     {
-        if (isActive && canMove == true)
+        if (isActive && canMove == true && isAttacking == false && moveTimer == 0 && isKnockedDown == false)
         {
             animator.SetBool("Moving", true);
 
-            enemy.transform.LookAt(new Vector3(hero.transform.position.x, 0, hero.transform.position.z));
+            enemy.transform.LookAt(new Vector3(hero.transform.position.x, positionY, hero.transform.position.z));
 
             enemy.transform.position += enemy.transform.forward * movementSpeed;
+        }
+        else if (isAttacking == true)
+        {
+            if (Mathf.Abs(hero.transform.position.x - enemy.transform.position.x) <= 2f && Mathf.Abs(hero.transform.position.z - enemy.transform.position.z) <= 2f)
+            {
+                enemy.transform.LookAt(new Vector3(hero.transform.position.x, positionY, hero.transform.position.z));
+                animator.SetBool("Attacking", (stunTimer == 0 && attackTimer == 0) ? true : false);
+                moveTimer = (moveTimer > 0) ? --moveTimer : 60;
+            }
+            else
+            {
+                isAttacking = false;
+                canMove = true;
+                animator.SetBool("Attacking", false);
+                animator.SetBool("Moving", false);
+            }
         }
 
         if (stunTimer > 0)
@@ -63,6 +85,9 @@ public class Zombie : Entity {
 
         if (attackTimer > 0)
             --attackTimer;
+
+        if (moveTimer > 0)
+            --moveTimer;
 
         if (knockDownTimer > 1)
         {
@@ -72,6 +97,8 @@ public class Zombie : Entity {
         {
             knockDownTimer = 0;
             animator.SetBool("KnockedDown", false);
+            moveTimer = 30;
+            isKnockedDown = false;
             canMove = true;
         }
 
@@ -88,11 +115,13 @@ public class Zombie : Entity {
         else if (other.gameObject.tag == "Player")
         {
             canMove = false;
-            enemy.transform.LookAt(new Vector3(hero.transform.position.x, 0, hero.transform.position.z));
+            isAttacking = true;
+            enemy.transform.LookAt(new Vector3(hero.transform.position.x, positionY, hero.transform.position.z));
             animator.SetBool("Moving", false);
             animator.SetBool("Attacking", (stunTimer == 0) ? true : false);
+            moveTimer = 60;
         }
-        else if (other.gameObject.tag == "HeroSword" && this.GetComponent<SphereCollider>().enabled == false)
+        else if (other.gameObject.tag == "HeroSword" && GetComponent<SphereCollider>().enabled == false)
         {
             EventManager.DamageInitiated(entity, hero.power, false, hero.attackCount, hero.maxAttackNumber);
             OnHit();
@@ -100,7 +129,7 @@ public class Zombie : Entity {
             if (hero.attackCount >= hero.maxAttackNumber)
                 KnockBack();
         }
-        else if (other.gameObject.tag == "Terrain")
+        else if (other.gameObject.tag == "Ground")
         {
             inAir = false;
             rigidBody.isKinematic = true;
@@ -109,25 +138,16 @@ public class Zombie : Entity {
 
     private void OnTriggerStay(Collider other)
     {
-        if (other.gameObject.tag == "Player")
+        if (other.gameObject.tag == "Ground" && !rigidBody.isKinematic)
         {
-            enemy.transform.LookAt(new Vector3(hero.transform.position.x, 0, hero.transform.position.z));
-            animator.SetBool("Attacking", (stunTimer == 0 && attackTimer == 0) ? true : false);
+            rigidBody.isKinematic = true;
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.gameObject.tag == "Player" && stunTimer == 0 && knockDownTimer == 0)
+        if (other.gameObject.tag == "Ground" && rigidBody.isKinematic)
         {
-            canMove = true;
-            animator.SetBool("Attacking", false);
-            animator.SetBool("Moving", true);
-        }
-        else if (other.gameObject.tag == "Terrain")
-        {
-            if (inAir == false)
-                inAir = true;
             rigidBody.isKinematic = false;
         }
     }
@@ -140,6 +160,7 @@ public class Zombie : Entity {
 
     void KnockBack()
     {
+        isKnockedDown = true;
         animator.SetBool("KnockedDown", true);
         animator.SetBool("Attacking", false);
         animator.SetBool("Moving", false);

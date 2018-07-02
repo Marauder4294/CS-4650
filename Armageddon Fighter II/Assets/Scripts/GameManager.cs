@@ -1,16 +1,17 @@
 ﻿//using System.Collections;
 //using System.Collections.Generic;
+//using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour {
 
     InputManager inputManager;
-    public GameManager GM;
+    GameManager GM;
 
     void Awake () {
 
-        //GameManager GM = new GameManager();
+        GameManager GM = GetComponent<GameManager>();
         
         inputManager = new InputManager();
     }

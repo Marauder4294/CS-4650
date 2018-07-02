@@ -71,10 +71,10 @@
     <None Include="Assets\Materials\Shaders\Regular.shader" />
     <None Include="Assets\Materials\Shaders\Rim Alpha.shader" />
     <Reference Include="UnityEditor.StandardEvents">
-      <HintPath>D:/Colin Hamilton/Documents/Colin/Weber State University/CS 4650/Game Project/Armageddon Fighter II/Library/ScriptAssemblies/UnityEditor.StandardEvents.dll</HintPath>
+      <HintPath>D:/Colin Hamilton/Documents/GitHub/CS-4650/Armageddon Fighter II/Library/ScriptAssemblies/UnityEditor.StandardEvents.dll</HintPath>
     </Reference>
     <Reference Include="Unity.PackageManagerUI.Editor">
-      <HintPath>D:/Colin Hamilton/Documents/Colin/Weber State University/CS 4650/Game Project/Armageddon Fighter II/Library/ScriptAssemblies/Unity.PackageManagerUI.Editor.dll</HintPath>
+      <HintPath>D:/Colin Hamilton/Documents/GitHub/CS-4650/Armageddon Fighter II/Library/ScriptAssemblies/Unity.PackageManagerUI.Editor.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AIModule">
       <HintPath>C:/Program Files/Unity/Editor/Data/Managed/UnityEngine/UnityEngine.AIModule.dll</HintPath>
