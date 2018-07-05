@@ -1,50 +1,23 @@
 ﻿//using System.Collections;
 //using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class Hero : Entity {
 
     #region Variable Declarations
 
-    //GameManager gameManager;
-    //InputManager inputManager;
-
-    Animator animator;
-    GameObject hero;
-    Rigidbody rigidBody;
-    Camera camera;
     float cameraOffsetX;
     float cameraOffsetZ;
 
-    AnimationClip currentClip;
-
-    float horizontal;
-    float vertical;
-
-    float movementSpeed;
-    float attackSpeed;
-    
-    bool nextAttack;
-    bool isMoving;
-    bool isAvoiding;
-    bool isJumping;
-    bool isBlocking;
-    bool isGoingUp;
-    Vector3 movement;
-
-    float jumpPower;
-    float jumpHeight;
-    int jumptimer;
+    int?[] attackAnimTimes = new int?[7];
 
     #endregion
 
-    void Awake() {
-
-        //gameManager = FindObjectOfType<GameManager>();
-        //inputManager = gameManager.inputManager;
-
-        hero = GameObject.FindGameObjectWithTag("Player");
-        rigidBody = hero.GetComponent<Rigidbody>();
+    void Awake()
+    {
+        entity = GameObject.FindGameObjectWithTag("Player").GetComponent<Entity>();
+        rigidBody = entity.GetComponent<Rigidbody>();
 
         #region Base Attribute Setter **Placeholder until saves are added
 
@@ -57,11 +30,20 @@ public class Hero : Entity {
 
         #endregion
 
-        animator = GetComponent<Animator>();
+        animator = entity.GetComponent<Animator>();
+        AnimationClip[] clip = animator.runtimeAnimatorController.animationClips;
 
-        camera = FindObjectOfType<Camera>();
-        cameraOffsetX = camera.transform.position.x - hero.transform.position.x;
-        cameraOffsetZ = camera.transform.position.z - hero.transform.position.z;
+        attackAnimTimes[1] = (int)((clip.First(a => a.name == "Attack_1-WindUp").length + clip.First(a => a.name == "Attack_1").length) * 24);
+        attackAnimTimes[2] = (int)(clip.First(a => a.name == "Attack_2").length * 24);
+        attackAnimTimes[3] = (int)((clip.First(a => a.name == "Attack_3-WindUp").length + clip.First(a => a.name == "Attack_3").length) * 24);
+        attackAnimTimes[4] = attackAnimTimes[3];
+        attackAnimTimes[5] = (int)((clip.First(a => a.name == "Attack_4-WindUp").length + clip.First(a => a.name == "Attack_4").length) * 24);
+        attackAnimTimes[0] = attackAnimTimes[1] + attackAnimTimes[2] + attackAnimTimes[3] + attackAnimTimes[4] + attackAnimTimes[5];
+
+        attackAnimTimes[6] = (int)(clip.First(a => a.name == "Jump_Attack").length * 24);
+
+        cameraOffsetX = Camera.main.transform.position.x - entity.transform.position.x;
+        cameraOffsetZ = Camera.main.transform.position.z - entity.transform.position.z;
 
         jumpPower = 3f;
         jumpHeight = jumpPower;
@@ -74,7 +56,10 @@ public class Hero : Entity {
 
         moveTimer = 0;
         attackTimer = 0;
-        jumptimer = 0;
+        attackLockTimer = 0;
+        jumpTimer = 0;
+
+        isAttacking = false;
 
         animator.SetFloat("AttackSpeed", attackSpeed);
 
@@ -87,11 +72,15 @@ public class Hero : Entity {
 
     private void OnTriggerEnter(Collider other)
     {
-        animator.SetBool("Landing", true);
-        animator.SetBool("Jumping", false);
-        inAir = false;
-        rigidBody.isKinematic = true;
-        jumptimer = 30;
+        if (other.gameObject.tag == "Ground" && !rigidBody.isKinematic)
+        {
+            animator.SetBool("Landing", true);
+            animator.SetBool("Jumping", false);
+            animator.SetBool("Attacking", false);
+            inAir = false;
+            rigidBody.isKinematic = true;
+            jumpTimer = 24;
+        }  
     }
 
     private void OnTriggerExit(Collider other)
@@ -116,85 +105,96 @@ public class Hero : Entity {
 
     public void OnAttack(bool isAction)
     {
-        if (isAction == true)
+        if (attackLockTimer == 0)
         {
+            isAttacking = true;
+
             if (attackCount >= 5)
+            {
                 attackCount = 0;
+            }
+            else
+            {
+                attackTimer = 100;
+            }
 
-            animator.SetBool("Attacking", true);
+            animator.SetBool("Attacking", isAttacking);
 
-            attackCount = (inAir == false) ? ++attackCount : 5;
+            if (inAir == false)
+            {
+                attackCount++;
+                attackLockTimer = attackAnimTimes[attackCount] ?? 0;
+                moveTimer = attackLockTimer;
+                jumpTimer = attackLockTimer;
+            }
+            else
+            {
+                attackCount = 5;
+                attackLockTimer = 1;
+            }
 
-            animator.SetInteger("AttackNumber", attackCount);
-
-            moveTimer = (inAir == false) ? 45 : 0;
-            attackTimer = 100;
-        }
-        else
-        {
-            animator.SetBool("Attacking", false);
-        }
-
-        if (attackTimer != 1)
-        {
-            --attackTimer;
-        }
-        else
-        {
-            attackTimer = 0;
-            attackCount = 0;
             animator.SetInteger("AttackNumber", attackCount);
         }
     }
 
     public void OnJump(bool isAction)
     {
-        attackCount = (isAction == true) ? 0 : attackCount;
+        //attackCount = (isAction == true) ? 0 : attackCount;
 
-        if (isAction == true && inAir == false && jumptimer == 0)
+        if (isAction == true && inAir == false && jumpTimer == 0)
         {
             inAir = true;
             animator.SetBool("Jumping", isAction);
             animator.SetBool("Landing", false);
+            animator.SetBool("Attacking", false);
             rigidBody.isKinematic = false;
 
             isGoingUp = true;
 
-            jumpHeight = hero.transform.position.y + jumpPower;
+            jumpHeight = entity.transform.position.y + jumpPower;
 
             movement.y = 0.15f;
 
-            hero.transform.position += movement;
+            entity.transform.position += movement;
         }
-        else if (inAir == true && isGoingUp == true)
-        {
-            if (hero.transform.position.y > jumpHeight)
-            {
-                isGoingUp = false;
-                movement.y = 0;
-            }
-            else
-            {
-                hero.transform.position += movement;
-            }
-        }
-
-        if (jumptimer > 0)
-            --jumptimer;
     }
 
     public void OnBlock(bool isAction)
     {
-        attackCount = (isAction == true) ? 0 : attackCount;
+        if (isAction)
+        {
+            if (attackCount > 0)
+            {
+                attackCount = 0;
+                animator.SetInteger("AttackNumber", attackCount);
+            }
 
-        isBlocking = isAction;
+            if (isAttacking)
+            {
+                isAttacking = false;
+                animator.SetBool("Attacking", isAttacking);
+            }
 
-        animator.SetBool("Blocking", isBlocking);
+            if (isMoving)
+            {
+                isMoving = false;
+                animator.SetBool("Moving", isMoving);
+            }
 
-        if (isAction == true)
-            isMoving = false;
-
-        animator.SetBool("Moving", isMoving);
+            if (!isBlocking)
+            {
+                isBlocking = true;
+                animator.SetBool("Blocking", isBlocking);
+            }
+        }
+        else
+        {
+            if (isBlocking)
+            {
+                isBlocking = false;
+                animator.SetBool("Blocking", isBlocking);
+            }
+        }
     }
 
     public void OnMove(float moveX, float moveY)
@@ -204,19 +204,62 @@ public class Hero : Entity {
         if (isMoving == true)
         {
             if (isBlocking == false)
-                hero.transform.LookAt(hero.transform.position += new Vector3(-moveY * movementSpeed, 0, -moveX * movementSpeed));
+                entity.transform.LookAt(entity.transform.position += new Vector3(-moveY * movementSpeed, 0, -moveX * movementSpeed));
 
-            hero.transform.forward += new Vector3(-moveY, 0, -moveX);
+            entity.transform.forward += new Vector3(-moveY, 0, -moveX);
 
             if (isBlocking == false)
-                camera.transform.position = new Vector3(hero.transform.position.x + cameraOffsetX, camera.transform.position.y, hero.transform.position.z + cameraOffsetZ);
+                Camera.main.transform.position = new Vector3(entity.transform.position.x + cameraOffsetX, Camera.main.transform.position.y, entity.transform.position.z + cameraOffsetZ);
         }
 
         animator.SetBool("Moving", isMoving);
         animator.SetFloat("MoveSpeed", (movementSpeed * 14f) * ((System.Math.Abs(moveX) + System.Math.Abs(moveY))) / 2);
 
+        #region Timer Updates
+
         if (moveTimer > 0)
             --moveTimer;
+
+        if (attackTimer != 1)
+        {
+            --attackTimer;
+        }
+        else
+        {
+            attackTimer = 0;
+            attackLockTimer = 0;
+            attackCount = 0;
+            animator.SetInteger("AttackNumber", attackCount);
+        }
+
+        if (inAir == true && isGoingUp == true)
+        {
+            if (entity.transform.position.y > jumpHeight)
+            {
+                isGoingUp = false;
+                movement.y = 0;
+            }
+            else
+            {
+                entity.transform.position += movement;
+            }
+        }
+
+        if (jumpTimer > 0)
+            --jumpTimer;
+
+        if (attackLockTimer > 0)
+        {
+            if (isAttacking == true)
+            {
+                isAttacking = false;
+                animator.SetBool("Attacking", isAttacking);
+            }
+
+            --attackLockTimer;
+        }
+
+        #endregion
     }
 
     //public void OnAvoid(float avoidX, float avoidY)
@@ -231,7 +274,7 @@ public class Hero : Entity {
     //        hero.transform.forward += new Vector3(-avoidY, 0, -avoidX);
 
     //        if (isBlocking == false)
-    //            camera.transform.position = new Vector3(hero.transform.position.x + cameraOffsetX, camera.transform.position.y, hero.transform.position.z + cameraOffsetZ);
+    //            Camera.main.transform.position = new Vector3(hero.transform.position.x + cameraOffsetX, Camera.main.transform.position.y, hero.transform.position.z + cameraOffsetZ);
     //    }
 
     //    animator.SetBool("Avoiding", isAvoiding);

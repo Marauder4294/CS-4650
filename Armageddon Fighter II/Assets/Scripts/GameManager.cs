@@ -9,24 +9,30 @@ public class GameManager : MonoBehaviour {
     InputManager inputManager;
     GameManager GM;
 
-    void Awake () {
-
+    void Awake ()
+    {
         GameManager GM = GetComponent<GameManager>();
-        
         inputManager = new InputManager();
     }
 
     // Update is called once per frame
     void Update()
     {
-        EventManager.AttackInitiated(Input.GetButtonDown(inputManager.AttackButton));
-        EventManager.JumpInitiated(Input.GetButtonDown(inputManager.JumpButton));
+        if (Input.GetButtonDown(inputManager.AttackButton))
+        {
+            EventManager.AttackInitiated(true);
+        }
+        else if (Input.GetButtonDown(inputManager.JumpButton))
+        {
+            EventManager.JumpInitiated(true);
+        }
+
         EventManager.BlockInitiated(Input.GetButton(inputManager.BlockButton));
     }
 
     private void FixedUpdate()
     {
         EventManager.MoveInitiated(Input.GetAxis(inputManager.LeftThumstickY), Input.GetAxis(inputManager.LeftThumstickX));
-        EventManager.AvoidInitiated(Input.GetAxis(inputManager.RightThumstickY), Input.GetAxis(inputManager.RightThumstickX));
+        //EventManager.AvoidInitiated(Input.GetAxis(inputManager.RightThumstickY), Input.GetAxis(inputManager.RightThumstickX));
     }
 }
