@@ -1,6 +1,6 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿//using System.Collections;
+//using System.Collections.Generic;
+//using UnityEngine;
 
 public class EventManager {
 
@@ -14,9 +14,6 @@ public class EventManager {
     public delegate void HeroMovementEvent(float moveX, float moveY);
     public static event HeroMovementEvent OnMove;
     public static event HeroMovementEvent OnAvoid;
-
-    public delegate void DamageEvent(Entity entity, int damage, bool isMagic, int attackNumber, int maxAttackNumber);
-    public static event DamageEvent OnDamage;
 
     #endregion
 
@@ -50,12 +47,6 @@ public class EventManager {
     {
         if (OnAvoid != null)
             OnAvoid(avoidX, avoidY);
-    }
-
-    public static void DamageInitiated(Entity entity, int damage, bool isMagic, int attackNumber, int maxAttackNumber)
-    {
-        if (OnDamage != null)
-            OnDamage(entity, damage, isMagic, attackNumber, maxAttackNumber);
     }
 
     #endregion

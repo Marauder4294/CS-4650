@@ -1,5 +1,6 @@
 ﻿//using System.Collections;
 //using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class Zombie : Entity
@@ -7,116 +8,144 @@ public class Zombie : Entity
     Hero hero;
     public GameObject enemy;
 
-	void Awake ()
+    BoxCollider leftHand;
+    BoxCollider rightHand;
+
+    readonly int?[] attackAnimTimes = new int?[1];
+
+    void Awake ()
     {
         EventManager.OnMove += Hunt;
 
-        movementSpeed = 0.05f;
+        MovementSpeed = 0.05f;
 
         hero = FindObjectOfType<Hero>();
-        rigidBody = enemy.GetComponent<Rigidbody>();
-        animator = enemy.GetComponent<Animator>();
-        entity = enemy.GetComponent<Entity>();
+        Rigid = enemy.GetComponent<Rigidbody>();
+        Anim = enemy.GetComponent<Animator>();
+        Ent = enemy.GetComponent<Entity>();
 
-        positionY = enemy.transform.position.y;
+        PositionY = enemy.transform.position.y;
 
-        isActive = false;
-        isMoving = false;
-        isAttacking = false;
-        isKnockedDown = false;
-        isFallingBack = false;
-        attackCount = 0;
+        IsActive = false;
+        IsMoving = false;
+        IsAttacking = false;
+        IsKnockedDown = false;
+        IsFallingBack = false;
+        AttackCount = 0;
 
-        moveTimer = 0;
-        attackTimer = 0;
-        stunTimer = 0;
-        fallBackTimer = 0;
+        MoveTimer = 0;
+        AttackTimer = 0;
+        StunTimer = 0;
+        FallBackTimer = 0;
 
-        #region Base Attribute Setter **Placeholder until multiple enemies are added
+        #region Base Attribute Setter
 
-        power = 5;
-        magic = 0;
-        defense = 5;
-        magicResist = 0;
-        block = 10;
-        vitality = 50;
+        Power = 5;
+        Magic = 0;
+        Defense = 5;
+        MagicResist = 0;
+        Block = 10;
+        Vitality = 50;
 
-        maxHealth = vitality;
-        health = maxHealth;
+        MaxHealth = Vitality;
+        Health = MaxHealth;
 
         #endregion
 
-        knockbackPowerHeight = 2f;
-        knockbackPowerLength = 4.5f;
+        KnockbackPowerHeight = 2f;
+        KnockbackPowerLength = 4.5f;
+
+        leftHand = enemy.transform.Find("Zombie/root/pelvis/spine01/spine02/spine03/clavicle_L/upperarm_L/lowerarm_L/hand_L").GetComponent<BoxCollider>();
+        rightHand = enemy.transform.Find("Zombie/root/pelvis/spine01/spine02/spine03/clavicle_R/upperarm_R/lowerarm_R/hand_R").GetComponent<BoxCollider>();
+
+        leftHand.enabled = false;
+        rightHand.enabled = false;
+
+        AnimationClip[] clip = Anim.runtimeAnimatorController.animationClips;
+
+        attackAnimTimes[0] = (int)(clip.First(a => a.name == "Attack").length * 24);
     }
 
     void Hunt(float moveX, float moveY)
     {
-        if (isActive && isMoving && !isAttacking && moveTimer == 0 && !isKnockedDown)
+        if (IsActive && IsMoving && !IsAttacking && MoveTimer == 0 && !IsKnockedDown)
         {
-            animator.SetBool("Moving", true);
-            enemy.transform.LookAt(new Vector3(hero.transform.position.x, positionY, hero.transform.position.z));
-            enemy.transform.position += enemy.transform.forward * movementSpeed;
+            Anim.SetBool("Moving", true);
+            enemy.transform.LookAt(new Vector3(hero.transform.position.x, PositionY, hero.transform.position.z));
+            enemy.transform.position += enemy.transform.forward * MovementSpeed;
         }
-        else if (isAttacking)
+        else if (IsAttacking)
         {
             if (Mathf.Abs(hero.transform.position.x - enemy.transform.position.x) <= 2f && Mathf.Abs(hero.transform.position.z - enemy.transform.position.z) <= 2f)
             {
-                enemy.transform.LookAt(new Vector3(hero.transform.position.x, positionY, hero.transform.position.z));
-                animator.SetBool("Attacking", (stunTimer == 0 && attackTimer == 0) ? true : false);
-                moveTimer = (moveTimer > 0) ? --moveTimer : 60;
+                enemy.transform.LookAt(new Vector3(hero.transform.position.x, PositionY, hero.transform.position.z));
+                Anim.SetBool("Attacking", (StunTimer == 0) ? true : false);
+                MoveTimer = (MoveTimer > 0) ? --MoveTimer : 60;
             }
             else
             {
-                isAttacking = false;
-                isMoving = true;
-                animator.SetBool("Attacking", false);
-                animator.SetBool("Moving", false);
+                IsAttacking = false;
+                IsMoving = true;
+                Anim.SetBool("Attacking", false);
+                Anim.SetBool("Moving", false);
             }
         }
 
-        if (isFallingBack)
+        if (IsFallingBack)
         {
-            if (isGoingUp)
+            if (IsGoingUp)
             {
-                if (enemy.transform.position.y >= knockbackPowerHeight)
+                if (enemy.transform.position.y >= KnockbackPowerHeight)
                 {
-                    isGoingUp = false;
+                    IsGoingUp = false;
                     movement.y = 0;
                 }
             }
 
-            if (fallBackTimer > 0)
+            if (FallBackTimer > 0)
             {
-                --fallBackTimer;
+                --FallBackTimer;
                 enemy.transform.position -= new Vector3(enemy.transform.forward.x * movement.x, movement.y, enemy.transform.forward.z * movement.z);
             }
             else
             {
-                isFallingBack = false;
+                IsFallingBack = false;
             }
         }
 
-        if (stunTimer > 0)
-            --stunTimer;
+        if (StunTimer > 0)
+            --StunTimer;
 
-        if (attackTimer > 0)
-            --attackTimer;
-
-        if (moveTimer > 0)
-            --moveTimer;
-
-        if (knockDownTimer > 1)
+        if (AttackTimer != 1)
         {
-            --knockDownTimer;
+            --AttackTimer;
         }
-        else if (knockDownTimer == 1)
+        else if (AttackTimer == 1)
         {
-            knockDownTimer = 0;
-            animator.SetBool("KnockedDown", false);
-            moveTimer = 30;
-            isKnockedDown = false;
-            isMoving = true;
+            AttackTimer = 0;
+            IsAttacking = false;
+            Anim.SetBool("Attacking", IsAttacking);
+            leftHand.enabled = false;
+            rightHand.enabled = false;
+        }
+
+        if (AttackLockTimer > 0)
+            --AttackLockTimer;
+
+        if (MoveTimer > 0)
+            --MoveTimer;
+
+        if (KnockDownTimer > 1)
+        {
+            --KnockDownTimer;
+        }
+        else if (KnockDownTimer == 1)
+        {
+            KnockDownTimer = 0;
+            Anim.SetBool("KnockedDown", false);
+            MoveTimer = 30;
+            IsKnockedDown = false;
+            IsMoving = true;
         }
     }
 
@@ -125,77 +154,84 @@ public class Zombie : Entity
         if (other.gameObject.tag == "Player" && enemy.GetComponent<SphereCollider>().enabled)
         {
             enemy.GetComponent<SphereCollider>().enabled = false;
-            isActive = true;
-            isMoving = true;
+            IsActive = true;
+            IsMoving = true;
         }
-        else if (other.gameObject.tag == "Player" && !isFallingBack)
+        else if (other.gameObject.tag == "Player" && !IsFallingBack && AttackLockTimer == 0)
         {
-            isMoving = false;
-            isAttacking = true;
-            enemy.transform.LookAt(new Vector3(hero.transform.position.x, positionY, hero.transform.position.z));
-            animator.SetBool("Moving", false);
-            animator.SetBool("Attacking", (stunTimer == 0) ? true : false);
-            moveTimer = 60;
-        }
-        else if (other.gameObject.tag == "HeroSword" && !GetComponent<SphereCollider>().enabled && !isKnockedDown)
-        {
-            OnDamage(entity, hero.power, false, hero.attackCount, hero.maxAttackNumber);
-            OnHit();
+            leftHand.enabled = true;
+            rightHand.enabled = true;
 
-            if (hero.attackCount >= hero.maxAttackNumber)
+            AttackTimer = attackAnimTimes[0] ?? 0;
+
+            AttackLockTimer = AttackTimer + 24;
+
+            IsMoving = false;
+            IsAttacking = true;
+            enemy.transform.LookAt(new Vector3(hero.transform.position.x, PositionY, hero.transform.position.z));
+            Anim.SetBool("Moving", false);
+            Anim.SetBool("Attacking", (StunTimer == 0) ? true : false);
+            MoveTimer = 60;
+        }
+        else if (other.gameObject.tag == "HeroSword" && !GetComponent<SphereCollider>().enabled && !IsKnockedDown)
+        {
+            Damage(hero.Ent, false);
+            Stun();
+
+            if (hero.Ent.AttackCount >= hero.MaxAttackNumber)
                 KnockBack();
         }
         else if (other.gameObject.tag == "Ground")
         {
-            inAir = false;
-            rigidBody.isKinematic = true;
+            InAir = false;
+            Rigid.isKinematic = true;
         }
     }
 
     private void OnTriggerStay(Collider other)
     {
-        if (other.gameObject.tag == "Ground" && !rigidBody.isKinematic)
+        if (other.gameObject.tag == "Ground" && !Rigid.isKinematic)
         {
-            rigidBody.isKinematic = true;
+            Rigid.isKinematic = true;
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.gameObject.tag == "Ground" && rigidBody.isKinematic)
+        if (other.gameObject.tag == "Ground" && Rigid.isKinematic)
         {
-            rigidBody.isKinematic = false;
+            Rigid.isKinematic = false;
         }
     }
 
-    void OnHit()
+    void Stun()
     {
-        animator.SetBool("Attacking", false);
-        stunTimer = 45;
+        Anim.SetBool("Attacking", false);
+        StunTimer = 45;
     }
 
     void KnockBack()
     {
-        isKnockedDown = true;
-        isFallingBack = true;
-        isGoingUp = true;
-        animator.SetBool("KnockedDown", true);
-        animator.SetBool("Attacking", false);
-        animator.SetBool("Moving", false);
+        IsKnockedDown = true;
+        IsFallingBack = true;
+        IsGoingUp = true;
+        Anim.SetBool("KnockedDown", true);
+        Anim.SetBool("Attacking", false);
+        Anim.SetBool("Moving", false);
 
         movement = new Vector3(0.15f, -0.15f, 0.15f);
 
-        if (knockbackPowerLength >= knockbackPowerHeight)
+        if (KnockbackPowerLength >= KnockbackPowerHeight)
         {
-            fallBackTimer = (int)(knockbackPowerLength / movement.x);
+            FallBackTimer = (int)(KnockbackPowerLength / movement.x);
         }
         else
         {
-            fallBackTimer = (int)(knockbackPowerHeight / movement.y);
+            FallBackTimer = (int)(KnockbackPowerHeight / movement.y);
         }
 
         enemy.transform.position -= new Vector3(enemy.transform.forward.x * movement.x, movement.y, enemy.transform.forward.z * movement.z);
 
-        knockDownTimer = 200;
+        KnockDownTimer = 200;
     }
 }

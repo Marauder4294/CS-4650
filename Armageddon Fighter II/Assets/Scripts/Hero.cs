@@ -5,33 +5,71 @@ using UnityEngine;
 
 public class Hero : Entity {
 
-    #region Variable Declarations
+    #region Hero-Specific Variable Declarations
 
     float cameraOffsetX;
     float cameraOffsetZ;
 
-    int?[] attackAnimTimes = new int?[7];
+    readonly int?[] attackAnimTimes = new int?[6];
 
     #endregion
 
     void Awake()
     {
-        entity = GameObject.FindGameObjectWithTag("Player").GetComponent<Entity>();
-        rigidBody = entity.GetComponent<Rigidbody>();
+        #region Set Unity objects
 
-        #region Base Attribute Setter **Placeholder until saves are added
-
-        power = 15;
-        magic = 5;
-        defense = 10;
-        magicResist = 0;
-        block = 10;
-        vitality = 20;
+        Ent = GameObject.FindGameObjectWithTag("Player").GetComponent<Entity>();
+        Rigid = Ent.GetComponent<Rigidbody>();
+        Anim = Ent.GetComponent<Animator>();
 
         #endregion
 
-        animator = entity.GetComponent<Animator>();
-        AnimationClip[] clip = animator.runtimeAnimatorController.animationClips;
+        #region Base Attribute Setter
+
+        Power = 15;
+        Magic = 5;
+        Defense = 10;
+        MagicResist = 0;
+        Block = 10;
+        Vitality = 20;
+
+        #endregion
+
+        #region Set Booleans and floats
+
+        JumpPower = 3f;
+        JumpHeight = JumpPower;
+
+        MovementSpeed = 0.1f;
+        AttackSpeed = 1.2f;
+
+        AttackCount = 0;
+        MaxAttackNumber = 5;
+
+        MoveTimer = 0;
+        AttackTimer = 0;
+        AttackLockTimer = 0;
+        JumpTimer = 0;
+
+        IsAttacking = false;
+
+        Anim.SetFloat("AttackSpeed", AttackSpeed);
+
+        #endregion
+
+        #region Subscribe to events
+
+        EventManager.OnAttack += OnAttack;
+        EventManager.OnJump += OnJump;
+        EventManager.OnBlock += OnBlock;
+        EventManager.OnMove += OnMove;
+        //EventManager.OnAvoid += OnAvoid;
+
+        #endregion
+
+        #region Set Hero-Specific variables 
+
+        AnimationClip[] clip = Anim.runtimeAnimatorController.animationClips;
 
         attackAnimTimes[1] = (int)((clip.First(a => a.name == "Attack_1-WindUp").length + clip.First(a => a.name == "Attack_1").length) * 24);
         attackAnimTimes[2] = (int)(clip.First(a => a.name == "Attack_2").length * 24);
@@ -40,100 +78,141 @@ public class Hero : Entity {
         attackAnimTimes[5] = (int)((clip.First(a => a.name == "Attack_4-WindUp").length + clip.First(a => a.name == "Attack_4").length) * 24);
         attackAnimTimes[0] = attackAnimTimes[1] + attackAnimTimes[2] + attackAnimTimes[3] + attackAnimTimes[4] + attackAnimTimes[5];
 
-        attackAnimTimes[6] = (int)(clip.First(a => a.name == "Jump_Attack").length * 24);
+        cameraOffsetX = Camera.main.transform.position.x - Ent.transform.position.x;
+        cameraOffsetZ = Camera.main.transform.position.z - Ent.transform.position.z;
 
-        cameraOffsetX = Camera.main.transform.position.x - entity.transform.position.x;
-        cameraOffsetZ = Camera.main.transform.position.z - entity.transform.position.z;
+        #endregion
+    }
 
-        jumpPower = 3f;
-        jumpHeight = jumpPower;
+    public void OnMove(float moveX, float moveY)
+    {
+        IsMoving = ((moveX != 0 || moveY != 0) && MoveTimer == 0) ? true : false;
 
-        movementSpeed = 0.1f;
-        attackSpeed = 1.2f;
+        if (IsMoving == true)
+        {
+            if (IsBlocking == false)
+                Ent.transform.LookAt(Ent.transform.position += new Vector3(-moveY * MovementSpeed, 0, -moveX * MovementSpeed));
 
-        attackCount = 0;
-        maxAttackNumber = 5;
+            Ent.transform.forward += new Vector3(-moveY, 0, -moveX);
 
-        moveTimer = 0;
-        attackTimer = 0;
-        attackLockTimer = 0;
-        jumpTimer = 0;
+            if (IsBlocking == false)
+                Camera.main.transform.position = new Vector3(Ent.transform.position.x + cameraOffsetX, Camera.main.transform.position.y, Ent.transform.position.z + cameraOffsetZ);
+        }
 
-        isAttacking = false;
+        Anim.SetBool("Moving", IsMoving);
+        Anim.SetFloat("MoveSpeed", (MovementSpeed * 14f) * ((System.Math.Abs(moveX) + System.Math.Abs(moveY))) / 2);
 
-        animator.SetFloat("AttackSpeed", attackSpeed);
+        #region Timer Updates
 
-        EventManager.OnAttack += OnAttack;
-        EventManager.OnJump += OnJump;
-        EventManager.OnBlock += OnBlock;
-        EventManager.OnMove += OnMove;
-        //EventManager.OnAvoid += OnAvoid;
+        if (MoveTimer > 0)
+            --MoveTimer;
+
+        if (AttackTimer != 1)
+        {
+            --AttackTimer;
+        }
+        else
+        {
+            AttackTimer = 0;
+            AttackLockTimer = 0;
+            AttackCount = 0;
+            Anim.SetInteger("AttackNumber", AttackCount);
+        }
+
+        if (InAir == true && IsGoingUp == true)
+        {
+            if (Ent.transform.position.y > JumpHeight)
+            {
+                IsGoingUp = false;
+                movement.y = 0;
+            }
+            else
+            {
+                Ent.transform.position += movement;
+            }
+        }
+
+        if (JumpTimer > 0)
+            --JumpTimer;
+
+        if (AttackLockTimer > 0)
+        {
+            if (IsAttacking == true)
+            {
+                IsAttacking = false;
+                Anim.SetBool("Attacking", IsAttacking);
+            }
+
+            --AttackLockTimer;
+        }
+
+        #endregion
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.tag == "Ground" && !rigidBody.isKinematic)
+        if (other.gameObject.tag == "Ground" && !Rigid.isKinematic)
         {
-            animator.SetBool("Landing", true);
-            animator.SetBool("Jumping", false);
-            animator.SetBool("Attacking", false);
-            inAir = false;
-            rigidBody.isKinematic = true;
-            jumpTimer = 24;
+            Anim.SetBool("Landing", true);
+            Anim.SetBool("Jumping", false);
+            Anim.SetBool("Attacking", false);
+            InAir = false;
+            Rigid.isKinematic = true;
+            JumpTimer = 24;
         }  
     }
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.gameObject.tag == "Ground" && rigidBody.isKinematic)
+        if (other.gameObject.tag == "Ground" && Rigid.isKinematic)
         {
-            rigidBody.isKinematic = false;
-            animator.SetBool("Jumping", true);
-            animator.SetBool("Landing", false);
+            Rigid.isKinematic = false;
+            Anim.SetBool("Jumping", true);
+            Anim.SetBool("Landing", false);
         }
     }
 
     private void OnTriggerStay(Collider other)
     {
-        if (other.gameObject.tag == "Ground" && !rigidBody.isKinematic)
+        if (other.gameObject.tag == "Ground" && !Rigid.isKinematic)
         {
-            rigidBody.isKinematic = true;
-            animator.SetBool("Jumping", false);
-            animator.SetBool("Landing", true);
+            Rigid.isKinematic = true;
+            Anim.SetBool("Jumping", false);
+            Anim.SetBool("Landing", true);
         }
     }
 
     public void OnAttack(bool isAction)
     {
-        if (attackLockTimer == 0)
+        if (AttackLockTimer == 0)
         {
-            isAttacking = true;
+            IsAttacking = true;
 
-            if (attackCount >= 5)
+            if (AttackCount >= 5)
             {
-                attackCount = 0;
+                AttackCount = 0;
             }
             else
             {
-                attackTimer = 100;
+                AttackTimer = 100;
             }
 
-            animator.SetBool("Attacking", isAttacking);
+            Anim.SetBool("Attacking", IsAttacking);
 
-            if (inAir == false)
+            if (InAir == false)
             {
-                attackCount++;
-                attackLockTimer = attackAnimTimes[attackCount] ?? 0;
-                moveTimer = attackLockTimer;
-                jumpTimer = attackLockTimer;
+                AttackCount++;
+                AttackLockTimer = attackAnimTimes[AttackCount] ?? 0;
+                MoveTimer = AttackLockTimer;
+                JumpTimer = AttackLockTimer;
             }
             else
             {
-                attackCount = 5;
-                attackLockTimer = 1;
+                AttackCount = 5;
+                AttackLockTimer = 1;
             }
 
-            animator.SetInteger("AttackNumber", attackCount);
+            Anim.SetInteger("AttackNumber", AttackCount);
         }
     }
 
@@ -141,21 +220,21 @@ public class Hero : Entity {
     {
         //attackCount = (isAction == true) ? 0 : attackCount;
 
-        if (isAction == true && inAir == false && jumpTimer == 0)
+        if (isAction == true && InAir == false && JumpTimer == 0)
         {
-            inAir = true;
-            animator.SetBool("Jumping", isAction);
-            animator.SetBool("Landing", false);
-            animator.SetBool("Attacking", false);
-            rigidBody.isKinematic = false;
+            InAir = true;
+            Anim.SetBool("Jumping", isAction);
+            Anim.SetBool("Landing", false);
+            Anim.SetBool("Attacking", false);
+            Rigid.isKinematic = false;
 
-            isGoingUp = true;
+            IsGoingUp = true;
 
-            jumpHeight = entity.transform.position.y + jumpPower;
+            JumpHeight = Ent.transform.position.y + JumpPower;
 
             movement.y = 0.15f;
 
-            entity.transform.position += movement;
+            Ent.transform.position += movement;
         }
     }
 
@@ -163,103 +242,38 @@ public class Hero : Entity {
     {
         if (isAction)
         {
-            if (attackCount > 0)
+            if (AttackCount > 0)
             {
-                attackCount = 0;
-                animator.SetInteger("AttackNumber", attackCount);
+                AttackCount = 0;
+                Anim.SetInteger("AttackNumber", AttackCount);
             }
 
-            if (isAttacking)
+            if (IsAttacking)
             {
-                isAttacking = false;
-                animator.SetBool("Attacking", isAttacking);
+                IsAttacking = false;
+                Anim.SetBool("Attacking", IsAttacking);
             }
 
-            if (isMoving)
+            if (IsMoving)
             {
-                isMoving = false;
-                animator.SetBool("Moving", isMoving);
+                IsMoving = false;
+                Anim.SetBool("Moving", IsMoving);
             }
 
-            if (!isBlocking)
+            if (!IsBlocking)
             {
-                isBlocking = true;
-                animator.SetBool("Blocking", isBlocking);
+                IsBlocking = true;
+                Anim.SetBool("Blocking", IsBlocking);
             }
         }
         else
         {
-            if (isBlocking)
+            if (IsBlocking)
             {
-                isBlocking = false;
-                animator.SetBool("Blocking", isBlocking);
+                IsBlocking = false;
+                Anim.SetBool("Blocking", IsBlocking);
             }
         }
-    }
-
-    public void OnMove(float moveX, float moveY)
-    {
-        isMoving = ((moveX != 0 || moveY != 0) && moveTimer == 0) ? true : false;
-
-        if (isMoving == true)
-        {
-            if (isBlocking == false)
-                entity.transform.LookAt(entity.transform.position += new Vector3(-moveY * movementSpeed, 0, -moveX * movementSpeed));
-
-            entity.transform.forward += new Vector3(-moveY, 0, -moveX);
-
-            if (isBlocking == false)
-                Camera.main.transform.position = new Vector3(entity.transform.position.x + cameraOffsetX, Camera.main.transform.position.y, entity.transform.position.z + cameraOffsetZ);
-        }
-
-        animator.SetBool("Moving", isMoving);
-        animator.SetFloat("MoveSpeed", (movementSpeed * 14f) * ((System.Math.Abs(moveX) + System.Math.Abs(moveY))) / 2);
-
-        #region Timer Updates
-
-        if (moveTimer > 0)
-            --moveTimer;
-
-        if (attackTimer != 1)
-        {
-            --attackTimer;
-        }
-        else
-        {
-            attackTimer = 0;
-            attackLockTimer = 0;
-            attackCount = 0;
-            animator.SetInteger("AttackNumber", attackCount);
-        }
-
-        if (inAir == true && isGoingUp == true)
-        {
-            if (entity.transform.position.y > jumpHeight)
-            {
-                isGoingUp = false;
-                movement.y = 0;
-            }
-            else
-            {
-                entity.transform.position += movement;
-            }
-        }
-
-        if (jumpTimer > 0)
-            --jumpTimer;
-
-        if (attackLockTimer > 0)
-        {
-            if (isAttacking == true)
-            {
-                isAttacking = false;
-                animator.SetBool("Attacking", isAttacking);
-            }
-
-            --attackLockTimer;
-        }
-
-        #endregion
     }
 
     //public void OnAvoid(float avoidX, float avoidY)

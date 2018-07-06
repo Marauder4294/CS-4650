@@ -4,71 +4,109 @@ using UnityEngine;
 
 public class Entity : MonoBehaviour {
 
-    #region Attributes
+    #region Public Fields
 
-    public Animator animator { get; set; }
-    public Entity entity { get; set; }
-    public Rigidbody rigidBody { get; set; }
-
-    public int power { get; set; }
-    public int magic { get; set; }
-    public int defense { get; set; }
-    public int block { get; set; }
-    public int magicResist { get; set; }
-    public int vitality { get; set; }
-
-    public int maxHealth { get; set; }
-    public int health { get; set; }
-
-    public int maxMana { get; set; }
-    public int mana { get; set; }
-
-    public int attackCount { get; set; }
-    public int maxAttackNumber { get; set; }
-
-    public Vector3 movement;
-
-    public int moveTimer { get; set; }
-    public int attackTimer { get; set; }
-    public int attackLockTimer { get; set; }
-    public int stunTimer { get; set; }
-    public int knockDownTimer { get; set; }
-    public int fallBackTimer { get; set; }
-
-    public bool isActive { get; set; }
-    public bool inAir { get; set; }
-    public bool isGoingUp { get; set; }
-    public bool isAttacking { get; set; }
-    public bool isMoving { get; set; }
-    public bool isAvoiding { get; set; }
-    public bool isJumping { get; set; }
-    public bool isBlocking { get; set; }
-    public bool isFallingBack { get; set; }
-    public bool isKnockedDown { get; set; }
-
-    public float positionY { get; set; }
-
-    public float knockbackPowerLength { get; set; }
-    public float knockbackPowerHeight { get; set; }
-
-    public float attackSpeed { get; set; }
-    public float movementSpeed { get; set; }
-
-    public float jumpPower { get; set; }
-    public float jumpHeight { get; set; }
-    public int jumpTimer { get; set; }
+    public Entity Ent { get; set; }
+    public int AttackCount { get; set; }
+    public int MaxAttackNumber { get; set; }
 
     #endregion
 
-    public void OnDamage(Entity entity, int damage, bool isMagic, int attackNumber, int maxAttackNumber)
+    #region Protected Fields
+
+    protected bool IsActive { get; set; }
+    protected bool IsGateKeeper { get; set; }
+    protected Animator Anim { get; set; }
+    protected Rigidbody Rigid { get; set; }
+
+    #region Attributes
+
+    protected int Power { get; set; }
+    protected int Magic { get; set; }
+    protected int Defense { get; set; }
+    protected int Block { get; set; }
+    protected int MagicResist { get; set; }
+    protected int Vitality { get; set; }
+
+    protected int MaxHealth { get; set; }
+    protected int Health { get; set; }
+
+    protected int MaxMana { get; set; }
+    protected int Mana { get; set; }
+
+    #endregion
+
+    #region Movement Fields
+
+    protected Vector3 movement;
+    protected int MoveTimer { get; set; }
+    protected bool IsMoving { get; set; }
+    protected bool IsAvoiding { get; set; }
+
+    #endregion
+
+    #region Combat Fields
+
+    protected bool IsAttacking { get; set; }
+    protected bool IsBlocking { get; set; }
+    protected int AttackTimer { get; set; }
+    protected int AttackLockTimer { get; set; }
+    protected int StunTimer { get; set; }
+
+    #endregion
+
+    #region Speed Modifiers
+
+    protected float AttackSpeed { get; set; }
+    protected float MovementSpeed { get; set; }
+
+    #endregion
+
+    #region Jump/Knockback Fields
+
+    #region Jump
+
+    protected float JumpPower { get; set; }
+    protected float JumpHeight { get; set; }
+    protected int JumpTimer { get; set; }
+    protected bool IsJumping { get; set; }
+
+    #endregion
+
+    protected bool InAir { get; set; }
+    protected bool IsGoingUp { get; set; }
+    protected float PositionY { get; set; }
+
+    #region Knockback
+
+    protected float KnockbackPowerLength { get; set; }
+    protected float KnockbackPowerHeight { get; set; }
+    protected int KnockDownTimer { get; set; }
+    protected int FallBackTimer { get; set; }
+    protected bool IsFallingBack { get; set; }
+    protected bool IsKnockedDown { get; set; }
+
+    #endregion
+
+    #endregion
+
+    #endregion
+
+    #region Universal Methods
+
+    protected void Damage(Entity other, bool isMagic)
     {
+        // TODO change other.Power and other.Magic to damage
+
         if (!isMagic)
         {
-            entity.health = entity.health - ((damage < entity.defense) ? (damage - entity.defense) : 1);
+            Health = Health - ((other.Power > Defense) ? (other.Power - Defense) : 1);
         }
         else
         {
-            entity.health = (entity.magicResist != 0) ? ((int)(entity.health - damage * ((100 - (float)entity.magicResist) / 100))) : (entity.health - damage);
+            Health = (MagicResist != 0) ? ((int)(Health - other.Magic * ((100 - (float)MagicResist) / 100))) : (Health - other.Magic);
         }
     }
+
+    #endregion
 }
