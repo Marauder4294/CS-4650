@@ -150,7 +150,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 400148, guid: b966fefceaf39294c8edce0afe29bab8, type: 3}
       propertyPath: m_RootOrder
-      value: 2
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 400148, guid: b966fefceaf39294c8edce0afe29bab8, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -258,7 +258,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e205afc7bb262c94dbecedeb1638fc4f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enemy: {fileID: 77205674}
+  zombie: {fileID: 77205674}
 --- !u!1 &77205680 stripped
 GameObject:
   m_PrefabParentObject: {fileID: 100024, guid: b966fefceaf39294c8edce0afe29bab8, type: 3}
@@ -590,7 +590,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 4894299809945532, guid: bc90ebc627aa70e48be3485d3c598ed5, type: 2}
       propertyPath: m_RootOrder
-      value: 3
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 1011605616923112, guid: bc90ebc627aa70e48be3485d3c598ed5, type: 2}
       propertyPath: m_Name
