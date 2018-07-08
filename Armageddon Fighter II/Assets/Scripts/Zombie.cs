@@ -10,13 +10,14 @@ public class Zombie : Entity
     BoxCollider leftHand;
     BoxCollider rightHand;
 
-    readonly int?[] attackAnimTimes = new int?[1];
+    readonly float?[] attackAnimTimes = new float?[1];
 
     void Awake ()
     {
         EventManager.OnMove += Hunt;
 
         MovementSpeed = 0.05f;
+        AttackSpeed = 1;
 
         Player = FindObjectOfType<Hero>();
         Rigid = zombie.GetComponent<Rigidbody>();
@@ -31,14 +32,19 @@ public class Zombie : Entity
         IsKnockedDown = false;
         IsFallingBack = false;
         NextAttack = false;
+        IsDead = false;
+
         AttackCount = 0;
 
-        MoveTimer = 0;
-        AttackTimer = 0;
-        StunTimer = 0;
-        FallBackTimer = 0;
+        MoveTimer = -1;
+        AttackTimer = -1;
+        StunTimer = -1;
+        FallBackTimer = -1;
+        DeathTimer = -1;
 
         #region Base Attribute Setter
+
+        Level = 1;
 
         Power = 5;
         Magic = 0;
@@ -65,113 +71,153 @@ public class Zombie : Entity
 
         AnimationClip[] clip = Anim.runtimeAnimatorController.animationClips;
 
-        attackAnimTimes[0] = (int)(clip.First(a => a.name == "Attack").length * 24);
+        attackAnimTimes[0] = clip.First(a => a.name == "Attack").length / AttackSpeed;
     }
 
     void Hunt(float moveX, float moveY)
     {
-        if (IsActive && IsMoving && !IsAttacking && MoveTimer == 0 && !IsKnockedDown)
+        if (!IsDead)
         {
-            Anim.SetBool("Moving", true);
-            zombie.transform.LookAt(new Vector3(Player.transform.position.x, PositionY, Player.transform.position.z));
-            zombie.transform.position += zombie.transform.forward * MovementSpeed;
-        }
-        else if (IsAttacking)
-        {
-            if (Mathf.Abs(Player.transform.position.x - zombie.transform.position.x) <= 2f && Mathf.Abs(Player.transform.position.z - zombie.transform.position.z) <= 2f)
+            if (IsActive && !IsAttacking && MoveTimer == -1 && !IsKnockedDown)
             {
+                if (!IsMoving)
+                {
+                    IsMoving = true;
+                    Anim.SetBool("Moving", IsMoving);
+                }
+
                 zombie.transform.LookAt(new Vector3(Player.transform.position.x, PositionY, Player.transform.position.z));
-                Anim.SetBool("Attacking", (StunTimer == 0) ? true : false);
-                MoveTimer = (MoveTimer > 0) ? --MoveTimer : 60;
+                zombie.transform.position += zombie.transform.forward * MovementSpeed;
             }
-            else
-            {
-                IsAttacking = false;
-                IsMoving = true;
-                Anim.SetBool("Attacking", false);
-                Anim.SetBool("Moving", false);
-            }
+            //else if (IsAttacking && AttackTimer == -1)
+            //{
+            //    if (Mathf.Abs(Player.transform.position.x - zombie.transform.position.x) <= 2f && Mathf.Abs(Player.transform.position.z - zombie.transform.position.z) <= 2f)
+            //    {
+            //        zombie.transform.LookAt(new Vector3(Player.transform.position.x, PositionY, Player.transform.position.z));
+            //        Anim.SetBool("Attacking", (StunTimer == 0) ? true : false);
+            //        MoveTimer = (MoveTimer > 0) ?  - Time.deltaTime : 3;
+            //    }
+            //    else
+            //    {
+            //        IsAttacking = false;
+            //        IsMoving = true;
+            //        Anim.SetBool("Attacking", false);
+            //        Anim.SetBool("Moving", false);
+            //    }
+            //}
+
+            DecrementAttackLockTimer();
+            DecrementAttackTimer();
+            DecrementJumpTimer();
+            DecrementMoveTimer();
+            DecrementStunTimer();
+        }
+        else
+        {
+            DecrementDeathTimer();
         }
 
-        DecrementAttackLockTimer();
-        DecrementAttackTimer();
-        DecrementJumpTimer();
-        DecrementKnockDownTimer();
-        DecrementMoveTimer();
-        DecrementStunTimer();
         Fallback();
+        DecrementKnockDownTimer();
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.tag == "Player" && zombie.GetComponent<SphereCollider>().enabled)
+        if (!IsDead)
         {
-            zombie.GetComponent<SphereCollider>().enabled = false;
-            IsActive = true;
-            IsMoving = true;
+            if (other.gameObject.tag == "Player" && zombie.GetComponent<SphereCollider>().enabled)
+            {
+                zombie.GetComponent<SphereCollider>().enabled = false;
+                IsActive = true;
+                IsMoving = true;
+                Anim.SetBool("Moving", IsMoving);
+            }
+            else if (other.gameObject.tag == "Player" && !IsKnockedDown && AttackLockTimer == -1)
+            {
+                leftHand.enabled = true;
+                rightHand.enabled = true;
+
+                AttackLockTimer = attackAnimTimes[0] ?? -1;
+
+                AttackTimer = AttackLockTimer + 2;
+
+                IsMoving = false;
+                IsAttacking = (StunTimer == -1) ? true : false;
+                zombie.transform.LookAt(new Vector3(Player.transform.position.x, PositionY, Player.transform.position.z));
+                Anim.SetBool("Moving", false);
+                Anim.SetBool("Attacking", IsAttacking);
+                MoveTimer = 1;
+
+                AttackCount = (AttackCount < 2) ? ++AttackCount : 0;
+            }
+            else if (other.gameObject.tag == "Ground")
+            {
+                InAir = false;
+                Rigid.isKinematic = true;
+            }
         }
-        else if (other.gameObject.tag == "Player" && !IsFallingBack && AttackLockTimer == 0)
+        else
         {
-            leftHand.enabled = true;
-            rightHand.enabled = true;
-
-            AttackLockTimer = attackAnimTimes[0] ?? 0;
-
-            AttackTimer = AttackLockTimer + 24;
-
-            IsMoving = false;
-            IsAttacking = (StunTimer == 0) ? true : false;
-            zombie.transform.LookAt(new Vector3(Player.transform.position.x, PositionY, Player.transform.position.z));
-            Anim.SetBool("Moving", false);
-            Anim.SetBool("Attacking", IsAttacking);
-            MoveTimer = 60;
-
-            AttackCount = (AttackCount < 2) ? ++AttackCount : 0; 
-        }
-        else if (other.gameObject.tag == "HeroSword" && !GetComponent<SphereCollider>().enabled && !IsKnockedDown)
-        {
-            Damage(Player.Ent, false);
-            Stun();
-
-            if (Player.Ent.AttackCount >= Player.MaxAttackNumber)
-                KnockBack();
-        }
-        else if (other.gameObject.tag == "Ground")
-        {
-            InAir = false;
-            Rigid.isKinematic = true;
+            if (other.gameObject.tag == "Ground")
+            {
+                InAir = false;
+                Rigid.isKinematic = true;
+            }
         }
     }
 
     private void OnTriggerStay(Collider other)
     {
-        if (other.gameObject.tag == "Ground" && !Rigid.isKinematic)
+        if (!IsDead)
         {
-            Rigid.isKinematic = true;
-        }
-        else if (other.gameObject.tag == "Player" && !IsFallingBack && AttackLockTimer == 0)
-        {
-            leftHand.enabled = true;
-            rightHand.enabled = true;
+            if (other.gameObject.tag == "Ground" && !Rigid.isKinematic)
+            {
+                Rigid.isKinematic = true;
+            }
+            else if (other.gameObject.tag == "Player" && !IsKnockedDown && AttackLockTimer == -1)
+            {
+                leftHand.enabled = true;
+                rightHand.enabled = true;
 
-            AttackLockTimer = attackAnimTimes[0] ?? 0;
+                AttackLockTimer = attackAnimTimes[0] ?? -1;
 
-            AttackTimer = AttackLockTimer + 24;
+                AttackTimer = AttackLockTimer + 2;
 
-            IsMoving = false;
-            IsAttacking = (StunTimer == 0) ? true : false;
-            zombie.transform.LookAt(new Vector3(Player.transform.position.x, PositionY, Player.transform.position.z));
-            Anim.SetBool("Moving", false);
-            Anim.SetBool("Attacking", IsAttacking);
-            MoveTimer = 60;
+                IsMoving = false;
+                IsAttacking = (StunTimer == -1) ? true : false;
+                zombie.transform.LookAt(new Vector3(Player.transform.position.x, PositionY, Player.transform.position.z));
+                Anim.SetBool("Moving", false);
+                Anim.SetBool("Attacking", IsAttacking);
+                MoveTimer = 3;
+
+                AttackCount = (AttackCount < 2) ? ++AttackCount : 0;
+            }
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.gameObject.tag == "Ground" && Rigid.isKinematic)
+        if (!IsDead)
         {
-            Rigid.isKinematic = false;
+            if (other.gameObject.tag == "Ground" && Rigid.isKinematic)
+            {
+                Rigid.isKinematic = false;
+            }
+            else if (other.gameObject.tag == "Player" && !IsKnockedDown)
+            {
+                if (IsAttacking)
+                {
+                    IsAttacking = false;
+                    Anim.SetBool("Attacking", IsAttacking);
+                }
+            }
+        }
+        else
+        {
+            if (other.gameObject.tag == "Ground" && Rigid.isKinematic)
+            {
+                Rigid.isKinematic = false;
+            }
         }
     }
 
@@ -179,16 +225,16 @@ public class Zombie : Entity
 
     protected override void DecrementAttackTimer()
     {
-        if (AttackTimer != 1)
+        if (AttackTimer > 0)
         {
-            --AttackTimer;
+            AttackTimer -= Time.deltaTime;
         }
-        else if (AttackTimer == 1)
+        else if (AttackTimer > -1)
         {
             leftHand.enabled = false;
             rightHand.enabled = false;
-            AttackTimer = 0;
-            AttackLockTimer = 0;
+            AttackTimer = -1;
+            AttackLockTimer = -1;
             AttackCount = 0;
             Anim.SetInteger("AttackNumber", AttackCount);
         }

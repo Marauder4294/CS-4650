@@ -10,7 +10,10 @@ public class Hero : Entity {
     float cameraOffsetX;
     float cameraOffsetZ;
 
-    readonly int?[] attackAnimTimes = new int?[6];
+    readonly float?[] attackAnimTimes = new float?[7];
+
+    BoxCollider sword;
+    BoxCollider shield;
 
     #endregion
 
@@ -26,6 +29,8 @@ public class Hero : Entity {
         #endregion
 
         #region Base Attribute Setter
+
+        Level = 1;
 
         Power = 15;
         Magic = 5;
@@ -44,6 +49,8 @@ public class Hero : Entity {
 
         #region Set Booleans and floats
 
+        PositionY = Player.transform.position.y;
+
         JumpPower = 3f;
         JumpHeight = JumpPower;
 
@@ -53,16 +60,19 @@ public class Hero : Entity {
         AttackCount = 0;
         MaxAttackNumber = 5;
 
-        MoveTimer = 0;
-        AttackTimer = 0;
-        AttackLockTimer = 0;
-        JumpTimer = 0;
+        MoveTimer = -1;
+        AttackTimer = -1;
+        AttackLockTimer = -1;
+        StunTimer = -1;
+        JumpTimer = -1;
+        DeathTimer = -1;
 
+        IsDead = false;
         IsAttacking = false;
         NextAttack = false;
 
-        KnockbackPowerHeight = 1.5f;
-        KnockbackPowerLength = 2f;
+        KnockbackPowerHeight = 2f;
+        KnockbackPowerLength = 4.5f;
 
         Anim.SetFloat("AttackSpeed", AttackSpeed);
 
@@ -82,95 +92,143 @@ public class Hero : Entity {
 
         AnimationClip[] clip = Anim.runtimeAnimatorController.animationClips;
 
-        attackAnimTimes[1] = (int)(((clip.First(a => a.name == "Attack_1-WindUp").length + clip.First(a => a.name == "Attack_1").length) * (24f * 1.5f)) / AttackSpeed);
-        attackAnimTimes[2] = (int)((clip.First(a => a.name == "Attack_2").length * 24f) / AttackSpeed);
-        attackAnimTimes[3] = (int)(((clip.First(a => a.name == "Attack_3-WindUp").length + clip.First(a => a.name == "Attack_3").length) * (24f * 1.5f)) / AttackSpeed);
+        attackAnimTimes[1] = ((clip.First(a => a.name == "Attack_1-WindUp").length / 3f) + clip.First(a => a.name == "Attack_1").length) / AttackSpeed;
+        attackAnimTimes[2] = clip.First(a => a.name == "Attack_2").length / AttackSpeed;
+        attackAnimTimes[3] = ((clip.First(a => a.name == "Attack_3-WindUp").length / 3f) + clip.First(a => a.name == "Attack_3").length) / AttackSpeed;
         attackAnimTimes[4] = attackAnimTimes[3];
-        attackAnimTimes[5] = (int)(((clip.First(a => a.name == "Attack_4-WindUp").length + clip.First(a => a.name == "Attack_4").length) * (24f * 1.5f)) / AttackSpeed);
+        attackAnimTimes[5] = ((clip.First(a => a.name == "Attack_4-WindUp").length / 3f) + clip.First(a => a.name == "Attack_4").length) / AttackSpeed;
+        attackAnimTimes[6] = clip.First(a => a.name == "Jump_Attack").length / AttackSpeed;
         attackAnimTimes[0] = attackAnimTimes[1] + attackAnimTimes[2] + attackAnimTimes[3] + attackAnimTimes[4] + attackAnimTimes[5];
 
         cameraOffsetX = Camera.main.transform.position.x - Player.transform.position.x;
         cameraOffsetZ = Camera.main.transform.position.z - Player.transform.position.z;
+
+        sword = Player.transform.Find("Dack/root/pelvis/spine01/spine02/spine03/clavicle_R/upperarm_R/lowerarm_R/hand_R").GetComponent<BoxCollider>();
+        shield = Player.transform.Find("Dack/root/pelvis/spine01/spine02/spine03/clavicle_L/upperarm_L/lowerarm_L/hand_L").GetComponent<BoxCollider>();
+
+        sword.enabled = false;
 
         #endregion
     }
 
     public void OnMove(float moveX, float moveY)
     {
-        IsMoving = ((moveX != 0 || moveY != 0) && MoveTimer == 0) ? true : false;
-
-        if (IsMoving == true)
+        if (!IsDead)
         {
-            if (IsBlocking == false)
-                Player.transform.LookAt(Player.transform.position += new Vector3(-moveY * MovementSpeed, 0, -moveX * MovementSpeed));
+            IsMoving = ((moveX != 0 || moveY != 0) && MoveTimer == -1 && !IsKnockedDown) ? true : false;
 
-            Player.transform.forward += new Vector3(-moveY, 0, -moveX);
+            if (IsMoving)
+            {
+                if (!IsBlocking)
+                    Player.transform.LookAt(Player.transform.position += new Vector3(-moveY * MovementSpeed, 0, -moveX * MovementSpeed));
 
-            if (IsBlocking == false)
+                Player.transform.forward += new Vector3(-moveY, 0, -moveX);
+            }
+            else if (IsKnockedDown && !IsFallingBack)
+            {
+                IsKnockedDown = false;
+                Anim.SetBool("KnockedDown", IsKnockedDown);
+            }
+
+            Anim.SetBool("Moving", IsMoving);
+            Anim.SetFloat("MoveSpeed", (MovementSpeed * 14f) * ((System.Math.Abs(moveX) + System.Math.Abs(moveY))) / 2);
+
+            DecrementAttackLockTimer();
+            DecrementAttackTimer();
+            DecrementJumpTimer();
+            DecrementMoveTimer();
+            DecrementStunTimer();
+            JumpUp();
+
+
+            if (!IsBlocking || IsKnockedDown)
                 Camera.main.transform.position = new Vector3(Player.transform.position.x + cameraOffsetX, Camera.main.transform.position.y, Player.transform.position.z + cameraOffsetZ);
         }
+        else
+        {
+            DecrementDeathTimer();
+        }
 
-        Anim.SetBool("Moving", IsMoving);
-        Anim.SetFloat("MoveSpeed", (MovementSpeed * 14f) * ((System.Math.Abs(moveX) + System.Math.Abs(moveY))) / 2);
-
-        DecrementAttackLockTimer();
-        DecrementAttackTimer();
-        DecrementJumpTimer();
-        DecrementKnockDownTimer();
-        DecrementMoveTimer();
-        DecrementStunTimer();
         Fallback();
-        JumpUp();
-
-        #region Hero-specific Updates
-
-
-
-        #endregion
+        DecrementKnockDownTimer();
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.tag == "Ground" && !Rigid.isKinematic)
+        if (!IsDead)
         {
-            Anim.SetBool("Landing", true);
-            Anim.SetBool("Jumping", false);
-            IsAttacking = false;
-            Anim.SetBool("Attacking", IsAttacking);
-            InAir = false;
-            Rigid.isKinematic = true;
-            JumpTimer = 24;
+            if (other.gameObject.tag == "Ground" && !Rigid.isKinematic)
+            {
+                Anim.SetBool("Landing", true);
+
+                if (InAir)
+                {
+                    IsJumping = false;
+                    InAir = false;
+                    Anim.SetBool("Jumping", IsJumping);
+                }
+
+                if (IsAttacking)
+                {
+                    IsAttacking = false;
+                    Anim.SetBool("Attacking", IsAttacking);
+                }
+
+                Rigid.isKinematic = true;
+                JumpTimer = 2;
+            }
         }
-        else if (other.gameObject.tag == "EnemyWeapon" && !IsKnockedDown)
+        else
         {
-            Damage(other.gameObject.GetComponentInParent<Entity>(), false);
-            Stun();
+            if (other.gameObject.tag == "Ground" && !Rigid.isKinematic)
+            {
+                Rigid.isKinematic = true;
+            }
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.gameObject.tag == "Ground" && Rigid.isKinematic)
+        if (!IsDead)
         {
-            Rigid.isKinematic = false;
-            Anim.SetBool("Jumping", true);
-            Anim.SetBool("Landing", false);
+            if (other.gameObject.tag == "Ground" && Rigid.isKinematic)
+            {
+                if (!IsKnockedDown)
+                    Anim.SetBool("Jumping", true);
+
+                Rigid.isKinematic = false;
+                Anim.SetBool("Landing", false);
+            }
+        }
+        else
+        {
+            if (other.gameObject.tag == "Ground" && Rigid.isKinematic)
+            {
+                Rigid.isKinematic = false;
+            }
         }
     }
 
     private void OnTriggerStay(Collider other)
     {
-        if (other.gameObject.tag == "Ground" && !Rigid.isKinematic)
+        if (!IsDead)
         {
-            Rigid.isKinematic = true;
-            Anim.SetBool("Jumping", false);
-            Anim.SetBool("Landing", true);
+            if (other.gameObject.tag == "Ground" && !Rigid.isKinematic)
+            {
+                Rigid.isKinematic = true;
+                Anim.SetBool("Jumping", false);
+                Anim.SetBool("Landing", true);
+            }
+            else if (other.gameObject.tag == "Ground" && PositionY != Player.transform.position.y)
+            {
+                PositionY = Player.transform.position.y;
+            }
         }
     }
 
     public void OnAttack(bool isAction)
     {
-        if (AttackLockTimer == 0)
+        if (AttackLockTimer == -1)
         {
             if (AttackCount >= 5)
             {
@@ -181,14 +239,17 @@ public class Hero : Entity {
             {
                 AttackCount++;
                 AttackLockTimer = attackAnimTimes[AttackCount] ?? 0;
-                AttackTimer = (AttackCount == 1) ? AttackLockTimer : (int)(100 / AttackSpeed);
+                AttackTimer = (AttackCount == 1) ? AttackLockTimer : 6 / AttackSpeed;
                 MoveTimer = AttackLockTimer;
                 JumpTimer = AttackLockTimer;
+                sword.enabled = true;
             }
             else
             {
                 AttackCount = 5;
-                AttackLockTimer = 1;
+                AttackLockTimer = 0.25f;
+                sword.enabled = true;
+                AttackLockTimer = attackAnimTimes[6] ?? 0;
             }
 
             IsAttacking = true;
@@ -203,7 +264,7 @@ public class Hero : Entity {
 
     public void OnJump(bool isAction)
     {
-        if (isAction == true && InAir == false && JumpTimer == 0)
+        if (isAction == true && InAir == false && JumpTimer == -1 && !IsKnockedDown)
         {
             InAir = true;
             Anim.SetBool("Jumping", isAction);
@@ -248,6 +309,11 @@ public class Hero : Entity {
                 IsBlocking = true;
                 Anim.SetBool("Blocking", IsBlocking);
             }
+
+            if (sword.enabled)
+            {
+                sword.enabled = false;
+            }
         }
         else
         {
@@ -282,11 +348,11 @@ public class Hero : Entity {
 
     protected override void DecrementAttackLockTimer()
     {
-        if (AttackLockTimer > 1)
+        if (AttackLockTimer > 0)
         {
-            --AttackLockTimer;
+            AttackLockTimer -= Time.deltaTime;
         }
-        else if (AttackLockTimer == 1)
+        else if (AttackLockTimer > -1)
         {
             if (AttackCount == 1 && NextAttack)
             {
@@ -298,9 +364,10 @@ public class Hero : Entity {
             }
             else
             {
+                sword.enabled = false;
                 IsAttacking = false;
                 Anim.SetBool("Attacking", IsAttacking);
-                AttackLockTimer = 0;
+                AttackLockTimer = -1;
             }
         }
     }

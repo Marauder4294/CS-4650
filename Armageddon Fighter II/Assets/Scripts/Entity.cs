@@ -19,6 +19,7 @@ public class Entity : MonoBehaviour {
     protected bool IsGateKeeper { get; set; }
     protected Animator Anim { get; set; }
     protected Rigidbody Rigid { get; set; }
+    protected int Level { get; set; }
 
     #region Attributes
 
@@ -40,7 +41,7 @@ public class Entity : MonoBehaviour {
     #region Movement Fields
 
     protected Vector3 movement;
-    protected int MoveTimer { get; set; }
+    protected float MoveTimer { get; set; }
     protected bool IsMoving { get; set; }
     protected bool IsAvoiding { get; set; }
 
@@ -51,9 +52,11 @@ public class Entity : MonoBehaviour {
     protected bool IsAttacking { get; set; }
     protected bool NextAttack { get; set; }
     protected bool IsBlocking { get; set; }
-    protected int AttackTimer { get; set; }
-    protected int AttackLockTimer { get; set; }
-    protected int StunTimer { get; set; }
+    protected float AttackTimer { get; set; }
+    protected float AttackLockTimer { get; set; }
+    protected float StunTimer { get; set; }
+    protected bool IsDead { get; set; }
+    protected float DeathTimer { get; set; }
 
     #endregion
 
@@ -70,7 +73,7 @@ public class Entity : MonoBehaviour {
 
     protected float JumpPower { get; set; }
     protected float JumpHeight { get; set; }
-    protected int JumpTimer { get; set; }
+    protected float JumpTimer { get; set; }
     protected bool IsJumping { get; set; }
 
     #endregion
@@ -83,8 +86,8 @@ public class Entity : MonoBehaviour {
 
     protected float KnockbackPowerLength { get; set; }
     protected float KnockbackPowerHeight { get; set; }
-    protected int KnockDownTimer { get; set; }
-    protected int FallBackTimer { get; set; }
+    protected float KnockDownTimer { get; set; }
+    protected float FallBackTimer { get; set; }
     protected bool IsFallingBack { get; set; }
     protected bool IsKnockedDown { get; set; }
 
@@ -96,33 +99,55 @@ public class Entity : MonoBehaviour {
 
     #region Universal Methods
 
-    protected void Damage(Entity other, bool isMagic)
+    public void Damage(Entity other, bool isMagic)
     {
         // TODO change other.Power and other.Magic to damage
 
-        if (!isMagic)
-        {
-            Health = Health - ((other.Power > Defense) ? (other.Power - Defense) : 1);
-        }
-        else
-        {
-            Health = (MagicResist != 0) ? ((int)(Health - other.Magic * ((100 - (float)MagicResist) / 100))) : (Health - other.Magic);
-        }
-
-
-        // TODO get knockback trajectory from other's forward
-
         if (other.AttackCount >= other.MaxAttackNumber)
-            KnockBack();
+        {
+            KnockBack(other);
+        }
+
+        if (!IsBlocking)
+        {
+            if (!isMagic)
+            {
+                Health = Health - ((other.Power > Defense) ? (other.Power - Defense) : 1);
+            }
+            else
+            {
+                Health = (MagicResist != 0) ? (int)(Health - other.Magic * ((100f - MagicResist) / 100f)) : Health - other.Magic;
+            }
+
+            Stun();
+
+            if (Health <= 0)
+            {
+                Death();
+            }
+        }
     }
 
     protected void Stun()
     {
         Anim.SetBool("Attacking", false);
-        StunTimer = 45;
+        StunTimer = 2;
     }
 
-    protected void KnockBack()
+    protected void Death()
+    {
+        if (!IsKnockedDown)
+        {
+            IsKnockedDown = true;
+            Anim.SetBool("KnockedDown", IsKnockedDown);
+        }
+
+        DeathTimer = 5;
+        IsDead = true;
+        Anim.SetBool("Dead", IsDead);
+    }
+
+    public void KnockBack(Entity other)
     {
         IsKnockedDown = true;
         IsFallingBack = true;
@@ -133,38 +158,51 @@ public class Entity : MonoBehaviour {
         Anim.SetBool("Attacking", IsAttacking);
         Anim.SetBool("Moving", IsMoving);
 
-        movement = new Vector3(0.15f, -0.15f, 0.15f);
+        if (IsBlocking)
+        {
+            IsBlocking = false;
+            Anim.SetBool("Blocking", IsBlocking);
+        }
+
+        movement = new Vector3(0.15f, 0.15f, 0.15f);
 
         if (KnockbackPowerLength >= KnockbackPowerHeight)
         {
-            FallBackTimer = (int)(KnockbackPowerLength / movement.x);
+            FallBackTimer = KnockbackPowerLength * movement.x;
         }
         else
         {
-            FallBackTimer = (int)(KnockbackPowerHeight / movement.y);
+            FallBackTimer = KnockbackPowerHeight * movement.y;
         }
 
-        Ent.transform.position -= new Vector3(Ent.transform.forward.x * movement.x, movement.y, Ent.transform.forward.z * movement.z);
+        transform.LookAt(new Vector3(other.transform.position.x, PositionY, other.transform.position.z));
+        transform.position += new Vector3(transform.forward.x * movement.x, movement.y, transform.forward.z * movement.z);
 
-        KnockDownTimer = 200;
+        KnockDownTimer = 5;
     }
 
     protected virtual void DecrementStunTimer()
     {
-        if (StunTimer != 0)
-            --StunTimer;
+        if (StunTimer > 0)
+        {
+            StunTimer -= Time.deltaTime;
+        }
+        else if (StunTimer > -1)
+        {
+            StunTimer = -1;
+        }
     }
 
     protected virtual void DecrementAttackTimer()
     {
-        if (AttackTimer > 1)
+        if (AttackTimer > 0)
         {
-            --AttackTimer;
+            AttackTimer -= Time.deltaTime;
         }
-        else if (AttackTimer == 1)
+        else if (AttackTimer > -1)
         {
-            AttackTimer = 0;
-            AttackLockTimer = 0;
+            AttackTimer = -1;
+            AttackLockTimer = -1;
             AttackCount = 0;
             Anim.SetInteger("AttackNumber", AttackCount);
         }
@@ -172,13 +210,13 @@ public class Entity : MonoBehaviour {
 
     protected virtual void DecrementAttackLockTimer()
     {
-        if (AttackLockTimer > 1)
+        if (AttackLockTimer > 0)
         {
-            --AttackLockTimer;
+            AttackLockTimer -= Time.deltaTime;
         }
-        else if (AttackLockTimer == 1)
+        else if (AttackLockTimer > -1)
         {
-            AttackLockTimer = 0;
+            AttackLockTimer = -1;
             IsAttacking = false;
             Anim.SetBool("Attacking", IsAttacking);
         }
@@ -187,21 +225,27 @@ public class Entity : MonoBehaviour {
     protected virtual void DecrementMoveTimer()
     {
         if (MoveTimer > 0)
-            --MoveTimer;
+        {
+            MoveTimer -= Time.deltaTime;
+        }
+        else if (MoveTimer > -1)
+        {
+            MoveTimer = -1;
+        }
     }
 
     protected virtual void DecrementKnockDownTimer()
     {
-        if (KnockDownTimer > 1)
+        if (KnockDownTimer > 0)
         {
-            --KnockDownTimer;
+            KnockDownTimer -= Time.deltaTime;
         }
-        else if (KnockDownTimer == 1)
+        else if (KnockDownTimer > -1)
         {
-            KnockDownTimer = 0;
-            Anim.SetBool("KnockedDown", false);
-            MoveTimer = 30;
+            KnockDownTimer = -1;
             IsKnockedDown = false;
+            Anim.SetBool("KnockedDown", IsKnockedDown);
+            MoveTimer = 1;
             IsMoving = true;
         }
     }
@@ -209,7 +253,13 @@ public class Entity : MonoBehaviour {
     protected virtual void DecrementJumpTimer()
     {
         if (JumpTimer > 0)
-            --JumpTimer;
+        {
+            JumpTimer -= Time.deltaTime;
+        }
+        else if (JumpTimer > -1)
+        {
+            JumpTimer = -1;
+        }
     }
 
     protected virtual void JumpUp()
@@ -243,13 +293,29 @@ public class Entity : MonoBehaviour {
 
             if (FallBackTimer > 0)
             {
-                --FallBackTimer;
-                Ent.transform.position -= new Vector3(Ent.transform.forward.x * movement.x, movement.y, Ent.transform.forward.z * movement.z);
+                FallBackTimer -= Time.deltaTime;
+                transform.position += new Vector3(-transform.forward.x * movement.x, movement.y, -transform.forward.z * movement.z);
             }
-            else
+            else if (FallBackTimer > -1)
             {
                 IsFallingBack = false;
+                FallBackTimer = -1;
+                movement.x = 0;
+                movement.z = 0;
             }
+        }
+    }
+
+    protected virtual void DecrementDeathTimer()
+    {
+        if (DeathTimer > 0)
+        {
+            DeathTimer -= Time.deltaTime;
+        }
+        else if (DeathTimer > -1)
+        {
+            DeathTimer = -1;
+            Destroy(Ent.gameObject);
         }
     }
 
