@@ -10,6 +10,7 @@ TagManager:
   - Weapon
   - Shield
   - DeathBoundary
+  - Boundary
   layers:
   - Default
   - TransparentFX

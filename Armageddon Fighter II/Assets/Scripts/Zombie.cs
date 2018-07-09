@@ -44,24 +44,51 @@ public class Zombie : Entity
 
         #region Base Attribute Setter
 
-        Level = 1;
+        // Master Zombie code for Alpha Presentation only...
 
-        Power = 15;
-        Magic = 0;
-        Defense = 5;
-        MagicResist = 0;
-        Block = 0;
-        Vitality = 50;
+        if (name != "Master Zombie")
+        {
+            Level = 1;
 
-        MaxHealth = Vitality;
-        Health = MaxHealth;
+            Power = 15;
+            Magic = 0;
+            Defense = 5;
+            MagicResist = 0;
+            Block = 0;
+            Vitality = 50;
+
+            MaxHealth = Vitality;
+            Health = MaxHealth;
+
+            MaxAttackNumber = 2;
+
+            KnockbackPowerHeight = 2f;
+            KnockbackPowerLength = 4.5f;
+        }
+        else
+        {
+            Level = 5;
+
+            Power = 30;
+            Magic = 0;
+            Defense = 10;
+            MagicResist = 0;
+            Block = 0;
+            Vitality = 100;
+
+            MaxHealth = Vitality;
+            Health = MaxHealth;
+
+            MaxAttackNumber = 1;
+
+            KnockbackPowerHeight = 1f;
+            KnockbackPowerLength = 3f;
+        }
+        
 
         #endregion
 
-        MaxAttackNumber = 2;
-
-        KnockbackPowerHeight = 2f;
-        KnockbackPowerLength = 4.5f;
+        
 
         leftHand = zombie.transform.Find("Zombie/root/pelvis/spine01/spine02/spine03/clavicle_L/upperarm_L/lowerarm_L/hand_L").GetComponent<BoxCollider>();
         rightHand = zombie.transform.Find("Zombie/root/pelvis/spine01/spine02/spine03/clavicle_R/upperarm_R/lowerarm_R/hand_R").GetComponent<BoxCollider>();
@@ -81,7 +108,7 @@ public class Zombie : Entity
 
     void Hunt(float moveX, float moveY)
     {
-        if (!IsDead && !Player.IsDead)
+        if (IsActive && !IsDead && !Player.IsDead)
         {
             if (IsActive && !IsAttacking && MoveTimer == -1 && !IsKnockedDown)
             {
@@ -133,9 +160,24 @@ public class Zombie : Entity
             if (other.gameObject.tag == "Player" && zombie.GetComponent<SphereCollider>().enabled)
             {
                 zombie.GetComponent<SphereCollider>().enabled = false;
+                zombie.transform.LookAt(new Vector3(Player.transform.position.x, PositionY, Player.transform.position.z));
                 IsActive = true;
                 IsMoving = true;
                 Anim.SetBool("Moving", IsMoving);
+            }
+            else if (other.gameObject.tag == "Boundary" && IsActive)
+            {
+                zombie.GetComponent<SphereCollider>().enabled = true;
+                IsActive = false;
+
+                IsMoving = false;
+                Anim.SetBool("Moving", IsMoving);
+
+                if (IsAttacking)
+                {
+                    IsAttacking = false;
+                    Anim.SetBool("Attacking", IsAttacking);
+                }
             }
             else if (other.gameObject.tag == "Player" && !IsKnockedDown && AttackLockTimer == -1)
             {
@@ -153,7 +195,7 @@ public class Zombie : Entity
                 Anim.SetBool("Attacking", IsAttacking);
                 MoveTimer = 1;
 
-                AttackCount = (AttackCount < 2) ? ++AttackCount : 0;
+                AttackCount = (AttackCount < MaxAttackNumber) ? ++AttackCount : 0;
             }
             else if (other.gameObject.tag == "Ground")
             {
@@ -177,7 +219,7 @@ public class Zombie : Entity
 
     private void OnTriggerStay(Collider other)
     {
-        if (!IsDead && !Player.IsDead)
+        if (IsActive  && !IsDead && !Player.IsDead)
         {
             if (other.gameObject.tag == "Ground" && !Rigid.isKinematic)
             {

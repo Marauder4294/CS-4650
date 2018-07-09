@@ -44,6 +44,7 @@ public class Entity : MonoBehaviour {
     protected float MoveTimer { get; set; }
     protected bool IsMoving { get; set; }
     protected bool IsAvoiding { get; set; }
+    protected bool IsTouchingBoundary { get; set; }
 
     #endregion
 

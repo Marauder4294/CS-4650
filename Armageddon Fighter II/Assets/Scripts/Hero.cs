@@ -9,13 +9,14 @@ public class Hero : Entity {
     #region Hero-Specific Variable Declarations
 
     float cameraOffsetX;
+    float cameraOffsetY;
     float cameraOffsetZ;
 
     Vector2 uiMaxHealthWhiteSize;
     Vector2 uiMaxHealthRedSize;
 
-    float uiMaxManaWhiteWidth;
-    float uiMaxManaBlueWidth;
+    //float uiMaxManaWhiteWidth;
+    //float uiMaxManaBlueWidth;
 
     RectTransform uiImageHealthWhiteCurrent;
     RectTransform uiImageHealthRedCurrent;
@@ -24,6 +25,8 @@ public class Hero : Entity {
 
     BoxCollider sword;
     BoxCollider shield;
+
+    CapsuleCollider sensor;
 
     #endregion
 
@@ -81,6 +84,7 @@ public class Hero : Entity {
         IsAttacking = false;
         NextAttack = false;
         IsActive = true;
+        IsTouchingBoundary = false;
 
         KnockbackPowerHeight = 2f;
         KnockbackPowerLength = 4.5f;
@@ -123,14 +127,25 @@ public class Hero : Entity {
         attackAnimTimes[0] = attackAnimTimes[1] + attackAnimTimes[2] + attackAnimTimes[3] + attackAnimTimes[4] + attackAnimTimes[5];
 
         cameraOffsetX = Camera.main.transform.position.x - Player.transform.position.x;
+        cameraOffsetY = Camera.main.transform.position.y - Player.transform.position.y;
         cameraOffsetZ = Camera.main.transform.position.z - Player.transform.position.z;
 
         sword = Player.transform.Find("Dack/root/pelvis/spine01/spine02/spine03/clavicle_R/upperarm_R/lowerarm_R/hand_R").GetComponent<BoxCollider>();
         shield = Player.transform.Find("Dack/root/pelvis/spine01/spine02/spine03/clavicle_L/upperarm_L/lowerarm_L/hand_L").GetComponent<BoxCollider>();
 
+        sensor = Player.GetComponent<CapsuleCollider>();
+
         sword.enabled = false;
 
         #endregion
+    }
+
+    private void OnDestroy()
+    {
+        EventManager.OnAttack -= OnAttack;
+        EventManager.OnJump -= OnJump;
+        EventManager.OnBlock -= OnBlock;
+        EventManager.OnMove -= OnMove;
     }
 
     public void OnMove(float moveX, float moveY)
@@ -141,9 +156,11 @@ public class Hero : Entity {
 
             if (IsMoving)
             {
-                if (!IsBlocking)
+                if (!IsTouchingBoundary && !IsBlocking)
+                {
                     Player.transform.LookAt(Player.transform.position += new Vector3(-moveY * MovementSpeed, 0, -moveX * MovementSpeed));
-
+                }
+                
                 Player.transform.forward += new Vector3(-moveY, 0, -moveX);
             }
             else if ((moveX != 0 || moveY != 0) && IsKnockedDown && !IsFallingBack)
@@ -178,9 +195,15 @@ public class Hero : Entity {
 
     private void OnTriggerEnter(Collider other)
     {
-        if (!IsDead)
+        if (!IsDead && !IsTouchingBoundary)
         {
-            if (other.gameObject.tag == "Ground" && !Rigid.isKinematic)
+            if (other.gameObject.tag == "Boundary")
+            {
+                IsTouchingBoundary = true;
+                Rigid.isKinematic = false;
+                //sensor.isTrigger = false;
+            }
+            else if (other.gameObject.tag == "Ground" && !Rigid.isKinematic)
             {
                 Anim.SetBool("Landing", true);
 
@@ -224,7 +247,11 @@ public class Hero : Entity {
     {
         if (!IsDead)
         {
-            if (other.gameObject.tag == "Ground" && Rigid.isKinematic)
+            if (other.gameObject.tag == "Boundary")
+            {
+                IsTouchingBoundary = false;
+            }
+            else if (other.gameObject.tag == "Ground" && Rigid.isKinematic)
             {
                 if (!IsKnockedDown)
                 {
@@ -247,7 +274,7 @@ public class Hero : Entity {
 
     private void OnTriggerStay(Collider other)
     {
-        if (!IsDead)
+        if (!IsDead && !IsTouchingBoundary)
         {
             if (other.gameObject.tag == "Ground" && !Rigid.isKinematic)
             {
@@ -260,7 +287,7 @@ public class Hero : Entity {
             else if (other.gameObject.tag == "Ground" && Mathf.Abs(Player.transform.position.y - PositionY) > 0.1)
             {
                 PositionY = Player.transform.position.y;
-                Camera.main.transform.position = new Vector3(Player.transform.position.x + cameraOffsetX, Camera.main.transform.position.y + PositionY, Player.transform.position.z + cameraOffsetZ);
+                Camera.main.transform.position = new Vector3(Player.transform.position.x + cameraOffsetX, PositionY + cameraOffsetY, Player.transform.position.z + cameraOffsetZ);
             }
         }
     }
