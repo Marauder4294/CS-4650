@@ -46,11 +46,11 @@ public class Zombie : Entity
 
         Level = 1;
 
-        Power = 5;
+        Power = 15;
         Magic = 0;
         Defense = 5;
         MagicResist = 0;
-        Block = 10;
+        Block = 0;
         Vitality = 50;
 
         MaxHealth = Vitality;
@@ -74,9 +74,14 @@ public class Zombie : Entity
         attackAnimTimes[0] = clip.First(a => a.name == "Attack").length / AttackSpeed;
     }
 
+    private void OnDestroy()
+    {
+        EventManager.OnMove -= Hunt;
+    }
+
     void Hunt(float moveX, float moveY)
     {
-        if (!IsDead)
+        if (!IsDead && !Player.IsDead)
         {
             if (IsActive && !IsAttacking && MoveTimer == -1 && !IsKnockedDown)
             {
@@ -123,7 +128,7 @@ public class Zombie : Entity
 
     private void OnTriggerEnter(Collider other)
     {
-        if (!IsDead)
+        if (!IsDead && !Player.IsDead)
         {
             if (other.gameObject.tag == "Player" && zombie.GetComponent<SphereCollider>().enabled)
             {
@@ -155,6 +160,10 @@ public class Zombie : Entity
                 InAir = false;
                 Rigid.isKinematic = true;
             }
+            else if (other.gameObject.tag == "DeathBoundary" && IsActive)
+            {
+                Destroy(gameObject);
+            }
         }
         else
         {
@@ -168,7 +177,7 @@ public class Zombie : Entity
 
     private void OnTriggerStay(Collider other)
     {
-        if (!IsDead)
+        if (!IsDead && !Player.IsDead)
         {
             if (other.gameObject.tag == "Ground" && !Rigid.isKinematic)
             {

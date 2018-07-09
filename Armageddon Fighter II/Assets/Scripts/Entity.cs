@@ -55,7 +55,7 @@ public class Entity : MonoBehaviour {
     protected float AttackTimer { get; set; }
     protected float AttackLockTimer { get; set; }
     protected float StunTimer { get; set; }
-    protected bool IsDead { get; set; }
+    public bool IsDead { get; set; }
     protected float DeathTimer { get; set; }
 
     #endregion
@@ -120,10 +120,11 @@ public class Entity : MonoBehaviour {
             }
 
             Stun();
+            TakeHealth();
 
             if (Health <= 0)
             {
-                Death();
+                Death(other);
             }
         }
     }
@@ -134,12 +135,11 @@ public class Entity : MonoBehaviour {
         StunTimer = 2;
     }
 
-    protected void Death()
+    protected virtual void Death(Entity other)
     {
         if (!IsKnockedDown)
         {
-            IsKnockedDown = true;
-            Anim.SetBool("KnockedDown", IsKnockedDown);
+            KnockBack(other);
         }
 
         DeathTimer = 5;
@@ -176,9 +176,14 @@ public class Entity : MonoBehaviour {
         }
 
         transform.LookAt(new Vector3(other.transform.position.x, PositionY, other.transform.position.z));
-        transform.position += new Vector3(transform.forward.x * movement.x, movement.y, transform.forward.z * movement.z);
+        transform.position += new Vector3(-transform.forward.x * movement.x, movement.y, -transform.forward.z * movement.z);
 
         KnockDownTimer = 5;
+    }
+
+    protected virtual void TakeHealth()
+    {
+        
     }
 
     protected virtual void DecrementStunTimer()

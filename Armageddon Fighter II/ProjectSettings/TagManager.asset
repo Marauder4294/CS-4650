@@ -9,6 +9,7 @@ TagManager:
   - Body
   - Weapon
   - Shield
+  - DeathBoundary
   layers:
   - Default
   - TransparentFX
