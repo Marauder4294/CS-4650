@@ -80,6 +80,7 @@ public class Hero : Entity {
         IsDead = false;
         IsAttacking = false;
         NextAttack = false;
+        IsActive = true;
 
         KnockbackPowerHeight = 2f;
         KnockbackPowerLength = 4.5f;
@@ -198,6 +199,16 @@ public class Hero : Entity {
 
                 Rigid.isKinematic = true;
                 JumpTimer = 1;
+            }
+            else if (other.gameObject.tag == "DeathBoundary")
+            {
+                Player.transform.Find("Body").GetComponent<SkinnedMeshRenderer>().enabled = false;
+                Player.transform.Find("Hair").GetComponent<SkinnedMeshRenderer>().enabled = false;
+                Player.transform.Find("HalfOne").GetComponent<SkinnedMeshRenderer>().enabled = false;
+                Player.transform.Find("HalfTwo").GetComponent<SkinnedMeshRenderer>().enabled = false;
+                Player.transform.Find("Shield").GetComponent<SkinnedMeshRenderer>().enabled = false;
+                IsKnockedDown = true;
+                Death(Ent);
             }
         }
         else

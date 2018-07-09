@@ -83,7 +83,7 @@ GameObject:
   - component: {fileID: 54156138398923282}
   - component: {fileID: 136757610403030698}
   - component: {fileID: 114222258828780694}
-  - component: {fileID: 65719525840699962}
+  - component: {fileID: 65819224741001870}
   m_Layer: 0
   m_Name: Dack
   m_TagString: Player
@@ -220,9 +220,11 @@ GameObject:
   m_Component:
   - component: {fileID: 4882199964090372}
   - component: {fileID: 137348837900840910}
+  - component: {fileID: 136555784498140476}
+  - component: {fileID: 114361426230621088}
   m_Layer: 0
   m_Name: Body
-  m_TagString: Untagged
+  m_TagString: Body
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -326,10 +328,9 @@ GameObject:
   m_Component:
   - component: {fileID: 4193252412157052}
   - component: {fileID: 137313148765655740}
-  - component: {fileID: 64434552172659336}
   m_Layer: 0
   m_Name: HalfTwo
-  m_TagString: HeroSword
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -898,9 +899,10 @@ GameObject:
   serializedVersion: 5
   m_Component:
   - component: {fileID: 4089395991080632}
+  - component: {fileID: 65102648533489422}
   m_Layer: 0
   m_Name: hand_L
-  m_TagString: Untagged
+  m_TagString: Shield
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1049,10 +1051,9 @@ GameObject:
   m_Component:
   - component: {fileID: 4334178044790230}
   - component: {fileID: 137821048115611542}
-  - component: {fileID: 64410068329555114}
   m_Layer: 0
   m_Name: HalfOne
-  m_TagString: HeroSword
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1095,9 +1096,10 @@ GameObject:
   serializedVersion: 5
   m_Component:
   - component: {fileID: 4047861526341596}
+  - component: {fileID: 65562559347342924}
   m_Layer: 0
   m_Name: hand_R
-  m_TagString: Untagged
+  m_TagString: Weapon
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1111,10 +1113,9 @@ GameObject:
   m_Component:
   - component: {fileID: 4419833548221564}
   - component: {fileID: 137380085206677686}
-  - component: {fileID: 64661506085137068}
   m_Layer: 0
   m_Name: Shield
-  m_TagString: HeroShield
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -2325,53 +2326,35 @@ Rigidbody:
   m_Drag: 0
   m_AngularDrag: 0.05
   m_UseGravity: 1
-  m_IsKinematic: 1
+  m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!64 &64410068329555114
-MeshCollider:
+--- !u!65 &65102648533489422
+BoxCollider:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1882997155101318}
+  m_GameObject: {fileID: 1781967600175668}
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Convex: 0
-  m_CookingOptions: 14
-  m_SkinWidth: 0.01
-  m_Mesh: {fileID: 0}
---- !u!64 &64434552172659336
-MeshCollider:
+  serializedVersion: 2
+  m_Size: {x: 0.48, y: 0.49, z: 0.13}
+  m_Center: {x: 0.07, y: 0.03, z: -0.06}
+--- !u!65 &65562559347342924
+BoxCollider:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1126360596671478}
+  m_GameObject: {fileID: 1915912381962410}
   m_Material: {fileID: 0}
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_Enabled: 1
-  serializedVersion: 3
-  m_Convex: 0
-  m_CookingOptions: 14
-  m_SkinWidth: 0.01
-  m_Mesh: {fileID: 0}
---- !u!64 &64661506085137068
-MeshCollider:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1917526232657828}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Convex: 0
-  m_CookingOptions: 14
-  m_SkinWidth: 0.01
-  m_Mesh: {fileID: 0}
---- !u!65 &65719525840699962
+  serializedVersion: 2
+  m_Size: {x: 0.15, y: 0.97, z: 0.07}
+  m_Center: {x: -0.13, y: -0.52, z: 0.04}
+--- !u!65 &65819224741001870
 BoxCollider:
   m_ObjectHideFlags: 1
   m_PrefabParentObject: {fileID: 0}
@@ -2381,8 +2364,8 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: -0.75, y: 0.32, z: -0.38}
-  m_Center: {x: 0, y: 0.47, z: 0.15}
+  m_Size: {x: 0.59, y: 0.34, z: 0.47}
+  m_Center: {x: 0, y: 0.5, z: 0.19}
 --- !u!95 &95180369494365384
 Animator:
   serializedVersion: 3
@@ -2412,6 +2395,31 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2cc804aa6397f704295800d1834b95a2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &114361426230621088
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1078867519118484}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9401c3a7d0cab844c8f6ee82f2981ceb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  character: {fileID: 1011605616923112}
+--- !u!136 &136555784498140476
+CapsuleCollider:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1078867519118484}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_Enabled: 1
+  m_Radius: 0.3
+  m_Height: 1.6
+  m_Direction: 1
+  m_Center: {x: 0.04, y: 1.03, z: 0.15}
 --- !u!136 &136757610403030698
 CapsuleCollider:
   m_ObjectHideFlags: 1
@@ -2421,7 +2429,7 @@ CapsuleCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 1
   m_Enabled: 1
-  m_Radius: 0.25
+  m_Radius: 0.3
   m_Height: 1.6
   m_Direction: 1
   m_Center: {x: 0.04, y: 1.03, z: 0.15}
