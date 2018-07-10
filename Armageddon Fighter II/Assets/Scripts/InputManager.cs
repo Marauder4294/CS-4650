@@ -8,7 +8,7 @@ public class InputManager
 
     #region ControllerType & Button Declarations
 
-    public enum ControllerType { PS4 , XBOX };
+    public enum ControllerType { PS4 , XBOX, Keyboard  };
     public ControllerType controllerType;
 
     #region Buttons
@@ -95,7 +95,7 @@ public class InputManager
         }
         else
         {
-            Application.Quit();
+            SetKeyboardAndButtons();
         }
     }
 
@@ -107,8 +107,8 @@ public class InputManager
         BlockButton = "PS4 L2 Button";
         JumpButton = "PS4 Square Button";
         StartButton = "PS4 Options Button";
-        LeftThumstickY = "Left Stick Y";
-        LeftThumstickX = "Left Stick X";
+        LeftThumstickY = "Controller Left Stick Y";
+        LeftThumstickX = "Controller Left Stick X";
         RightThumstickX = "PS4 Right Stick X";
         RightThumstickY = "PS4 Right Stick Y";
     }
@@ -121,9 +121,23 @@ public class InputManager
         BlockButton = "XBOX Y Button";
         JumpButton = "XBOX X Button";
         StartButton = "XBOX Start Button";
-        LeftThumstickY = "Left Stick Y";
-        LeftThumstickX = "Left Stick X";
+        LeftThumstickY = "Controller Left Stick Y";
+        LeftThumstickX = "Controller Left Stick X";
         RightThumstickX = "XBOX Right Stick X";
         RightThumstickY = "XBOX Right Stick Y";
+    }
+
+    void SetKeyboardAndButtons()
+    {
+        controllerType = ControllerType.Keyboard;
+
+        AttackButton = "Keyboard Right Ctrl";
+        BlockButton = "Keyboard Right Shift";
+        JumpButton = "Keyboard Space";
+        StartButton = "Keyboard Return";
+        LeftThumstickY = "Keyboard Left Stick Y";
+        LeftThumstickX = "Keyboard Left Stick X";
+        RightThumstickX = "Keyboard Right Stick X";
+        RightThumstickY = "Keyboard Right Stick Y";
     }
 }

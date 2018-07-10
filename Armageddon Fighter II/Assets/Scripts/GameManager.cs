@@ -100,7 +100,7 @@ public class GameManager : MonoBehaviour {
 
     private void PauseMenu(float moveY, bool actionButton)
     {
-        if (Mathf.Abs(moveY) >= 0.5f && selectionTimer == 0)
+        if (((Mathf.Abs(moveY) >= 0.5f) || (inputManager.controllerType == InputManager.ControllerType.Keyboard && (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.S)))) && selectionTimer == 0)
         {
             if (restartUnderline.enabled)
             {
