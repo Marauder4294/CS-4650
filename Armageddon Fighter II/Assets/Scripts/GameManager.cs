@@ -38,28 +38,30 @@ public class GameManager : MonoBehaviour {
         selectionTimer = 0;
     }
 
-    // Update is called once per frame
     void Update()
     {
         if (!isPaused)
         {
-            if (Input.GetButtonDown(inputManager.AttackButton))
+            if (!isPaused)
             {
-                EventManager.AttackInitiated(true);
-            }
-            else if (Input.GetButtonDown(inputManager.JumpButton))
-            {
-                EventManager.JumpInitiated(true);
-            }
+                if (inputManager.GetButtonDown(InputManager.InputKey.Attack))
+                {
+                    EventManager.AttackInitiated(true);
+                }
+                else if (inputManager.GetButtonDown(InputManager.InputKey.Jump))
+                {
+                    EventManager.JumpInitiated(true);
+                }
 
-            EventManager.BlockInitiated(Input.GetButton(inputManager.BlockButton));
+                EventManager.BlockInitiated(inputManager.GetButton(InputManager.InputKey.Block));
+            }
         }
         else
         {
-            PauseMenu(Input.GetAxis(inputManager.LeftThumstickY), Input.GetButtonDown(inputManager.AttackButton));
+            PauseMenu(inputManager.GetAxis(InputManager.InputKey.LeftThumstickY), inputManager.GetButtonDown(InputManager.InputKey.Attack));
         }
 
-        if (Input.GetButtonDown(inputManager.StartButton))
+        if (inputManager.GetButtonDown(InputManager.InputKey.Start))
         {
             PauseToggle();
         }
@@ -69,7 +71,7 @@ public class GameManager : MonoBehaviour {
     {
         if (!isPaused)
         {
-            EventManager.MoveInitiated(Input.GetAxis(inputManager.LeftThumstickY), Input.GetAxis(inputManager.LeftThumstickX));
+            EventManager.MoveInitiated(inputManager.GetAxis(InputManager.InputKey.LeftThumstickY), inputManager.GetAxis(InputManager.InputKey.LeftThumstickX));
             //EventManager.AvoidInitiated(Input.GetAxis(inputManager.RightThumstickY), Input.GetAxis(inputManager.RightThumstickX));
         }
     }
@@ -98,39 +100,41 @@ public class GameManager : MonoBehaviour {
         }
     }
 
+
+    // TODO Refactor Pause Menu
     private void PauseMenu(float moveY, bool actionButton)
     {
-        if (((Mathf.Abs(moveY) >= 0.5f) || (inputManager.controllerType == InputManager.ControllerType.Keyboard && (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.S)))) && selectionTimer == 0)
-        {
-            if (restartUnderline.enabled)
-            {
-                restartUnderline.enabled = false;
-                exitUnderline.enabled = true;
-            }
-            else
-            {
-                restartUnderline.enabled = true;
-                exitUnderline.enabled = false;
-            }
+        //if (((Mathf.Abs(moveY) >= 0.5f) || (inputManager.controllerType == InputManager.ControllerType.Keyboard && (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.S)))) && selectionTimer == 0)
+        //{
+        //    if (restartUnderline.enabled)
+        //    {
+        //        restartUnderline.enabled = false;
+        //        exitUnderline.enabled = true;
+        //    }
+        //    else
+        //    {
+        //        restartUnderline.enabled = true;
+        //        exitUnderline.enabled = false;
+        //    }
 
-            selectionTimer = 30;
-        }
-        else if (actionButton)
-        {
-            if (restartUnderline.enabled)
-            {
-                Time.timeScale = 1;
-                SceneManager.LoadScene("Level 1");
-            }
-            else
-            {
-                Application.Quit();
-            }
-        }
+        //    selectionTimer = 30;
+        //}
+        //else if (actionButton)
+        //{
+        //    if (restartUnderline.enabled)
+        //    {
+        //        Time.timeScale = 1;
+        //        SceneManager.LoadScene("Level 1");
+        //    }
+        //    else
+        //    {
+        //        Application.Quit();
+        //    }
+        //}
 
-        if (selectionTimer > 0)
-        {
-            --selectionTimer;
-        }
+        //if (selectionTimer > 0)
+        //{
+        //    --selectionTimer;
+        //}
     }
 }
