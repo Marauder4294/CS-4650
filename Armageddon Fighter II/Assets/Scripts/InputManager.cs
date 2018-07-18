@@ -5,23 +5,22 @@ using UnityEngine;
 
 public class InputManager
 {
-    // TODO add the needed Axes in the Unity InputManager
-
     #region ControllerType & Button Declarations
 
-    enum ControllerType { Keyboard, PS4, XBOX };
+    public enum ControllerType { Keyboard, PS4, XBOX };
     enum InputType
     {
-        Button, AxisX, AxisY, Axis3, Axis4, Axis5, Axis6, Axis7, Axis8, Axis9, Axis10, Axis11, Axis12, Axis13, Axis14, Axis15, Axis16,
-        Axis17, Axis18, Axis19, Axis20, Axis21, Axis22, Axis23, Axis24, Axis25, Axis26, Axis27, Axis28, Axis29
-    }
-    //enum InputType { ButtonKeyCode, ButtonString, Axis }
-    public enum InputKey
-    {
-        Attack, Block, Jump, LeftThumstickX, LeftThumstickY, RightThumstickX, RightThumstickY, Start, Inventory, MagicOne, MagicTwo, MagicThree
+        Button, AxisX, AxisXInverted, AxisY, AxisYInverted, Axis3, Axis3Inverted, Axis4, Axis4Inverted, Axis5, Axis5Inverted, Axis6, Axis6Inverted, Axis7, Axis7Inverted,
+        Axis8, Axis8Inverted, Axis9, Axis9Inverted, Axis10, Axis10Inverted
     }
 
-    ControllerType controllerType;
+    public enum InputKey
+    {
+        Attack, Block, Jump, LeftThumstickX, LeftThumstickY, RightThumstickX, RightThumstickY, Start, Inventory, MagicOne, MagicTwo, MagicThree, KeyboardMoveUp, KeyboardMoveDown,
+        KeyboardMoveLeft, KeyboardMoveRight, KeyboardAvoidUp, KeyboardAvoidDown, KeyboardAvoidLeft, KeyboardAvoidRight
+    }
+
+    public ControllerType controllerType;
 
     #region Buttons
 
@@ -118,6 +117,8 @@ public class InputManager
     };
 
     ControlInput[] KeyboardcontrolInputs = {
+
+        #region Buttons
 
         new ControlInput("Backspace", ControllerType.Keyboard, InputType.Button, KeyCode.Backspace),
         new ControlInput("Delete", ControllerType.Keyboard, InputType.Button, KeyCode.Delete),
@@ -219,12 +220,14 @@ public class InputManager
         new ControlInput("Right Control", ControllerType.Keyboard, InputType.Button, KeyCode.RightControl),
         new ControlInput("Left Control", ControllerType.Keyboard, InputType.Button, KeyCode.LeftControl),
         new ControlInput("Right Alt", ControllerType.Keyboard, InputType.Button, KeyCode.RightAlt),
-        new ControlInput("Left Alt", ControllerType.Keyboard, InputType.Button, KeyCode.LeftAlt),
+        new ControlInput("Left Alt", ControllerType.Keyboard, InputType.Button, KeyCode.LeftAlt)
+
+        #endregion
 
     };
 
 
-    PlayInput[] playInputs = new PlayInput[12];
+    PlayInput[] playInputs = new PlayInput[20];
 
     #endregion
 
@@ -286,13 +289,22 @@ public class InputManager
         controllerType = ControllerType.Keyboard;
 
         playInputs[(int)InputKey.Attack] = new PlayInput(InputKey.Attack, KeyboardcontrolInputs.First(a => a.inputName == "Right Control"));
-        playInputs[(int)InputKey.Block] = new PlayInput(InputKey.Block, KeyboardcontrolInputs.First(a => a.inputName == "Right Shifr"));
+        playInputs[(int)InputKey.Block] = new PlayInput(InputKey.Block, KeyboardcontrolInputs.First(a => a.inputName == "Right Shift"));
         playInputs[(int)InputKey.Jump] = new PlayInput(InputKey.Jump, KeyboardcontrolInputs.First(a => a.inputName == "Space"));
         playInputs[(int)InputKey.Start] = new PlayInput(InputKey.Start, KeyboardcontrolInputs.First(a => a.inputName == "Return/Enter"));
-        playInputs[(int)InputKey.LeftThumstickX] = new PlayInput(InputKey.LeftThumstickX, KeyboardcontrolInputs.First(a => a.inputName == "Left Stick X"));
-        playInputs[(int)InputKey.LeftThumstickY] = new PlayInput(InputKey.LeftThumstickY, KeyboardcontrolInputs.First(a => a.inputName == "Left Stick Y"));
-        playInputs[(int)InputKey.RightThumstickX] = new PlayInput(InputKey.RightThumstickX, KeyboardcontrolInputs.First(a => a.inputName == "Right Stick X"));
-        playInputs[(int)InputKey.RightThumstickY] = new PlayInput(InputKey.RightThumstickY, KeyboardcontrolInputs.First(a => a.inputName == "Right Stick X"));
+
+        #region Custom Keyboard Input Control
+
+        playInputs[(int)InputKey.KeyboardMoveUp] = new PlayInput(InputKey.KeyboardMoveUp, KeyboardcontrolInputs.First(a => a.inputName == "W"));
+        playInputs[(int)InputKey.KeyboardMoveDown] = new PlayInput(InputKey.KeyboardMoveDown, KeyboardcontrolInputs.First(a => a.inputName == "S"));
+        playInputs[(int)InputKey.KeyboardMoveLeft] = new PlayInput(InputKey.KeyboardMoveLeft, KeyboardcontrolInputs.First(a => a.inputName == "A"));
+        playInputs[(int)InputKey.KeyboardMoveRight] = new PlayInput(InputKey.KeyboardMoveRight, KeyboardcontrolInputs.First(a => a.inputName == "D"));
+        playInputs[(int)InputKey.KeyboardAvoidUp] = new PlayInput(InputKey.KeyboardAvoidUp, KeyboardcontrolInputs.First(a => a.inputName == "Up Arrow"));
+        playInputs[(int)InputKey.KeyboardAvoidDown] = new PlayInput(InputKey.KeyboardAvoidDown, KeyboardcontrolInputs.First(a => a.inputName == "Down Arrow"));
+        playInputs[(int)InputKey.KeyboardAvoidLeft] = new PlayInput(InputKey.KeyboardAvoidLeft, KeyboardcontrolInputs.First(a => a.inputName == "Left Arrow"));
+        playInputs[(int)InputKey.KeyboardAvoidRight] = new PlayInput(InputKey.KeyboardAvoidRight, KeyboardcontrolInputs.First(a => a.inputName == "Right Arrow"));
+
+        #endregion
 
         //TODO Add Axis buttons for keyboard movement
     }
@@ -338,6 +350,22 @@ public class InputManager
         else if (playInputs[(int)axis].controlInput.inputType == InputType.Button && Input.GetKey(playInputs[(int)axis].controlInput.inputKeyCode))
         {
             return 0.9f;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
+    public float GetKeyboardAxis(InputKey axisPlus, InputKey axisMinus)
+    {
+        if (Input.GetKey(playInputs[(int)axisPlus].controlInput.inputKeyCode))
+        {
+            return 0.9f;
+        }
+        else if (Input.GetKey(playInputs[(int)axisMinus].controlInput.inputKeyCode))
+        {
+            return -0.9f;
         }
         else
         {

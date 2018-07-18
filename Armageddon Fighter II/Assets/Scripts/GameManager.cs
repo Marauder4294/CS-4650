@@ -71,8 +71,19 @@ public class GameManager : MonoBehaviour {
     {
         if (!isPaused)
         {
-            EventManager.MoveInitiated(inputManager.GetAxis(InputManager.InputKey.LeftThumstickY), inputManager.GetAxis(InputManager.InputKey.LeftThumstickX));
-            //EventManager.AvoidInitiated(Input.GetAxis(inputManager.RightThumstickY), Input.GetAxis(inputManager.RightThumstickX));
+            if (inputManager.controllerType.ToString() != "Keyboard")
+            {
+                EventManager.MoveInitiated(inputManager.GetAxis(InputManager.InputKey.LeftThumstickY), inputManager.GetAxis(InputManager.InputKey.LeftThumstickX));
+                //EventManager.AvoidInitiated(Input.GetAxis(inputManager.RightThumstickY), Input.GetAxis(inputManager.RightThumstickX));
+            }
+            else
+            {
+                EventManager.MoveInitiated(inputManager.GetKeyboardAxis(InputManager.InputKey.KeyboardMoveUp, InputManager.InputKey.KeyboardMoveDown),
+                    inputManager.GetKeyboardAxis(InputManager.InputKey.KeyboardMoveRight, InputManager.InputKey.KeyboardMoveLeft));
+                //EventManager.AvoidInitiated(inputManager.GetKeyboardAxis(InputManager.InputKey.KeyboardAvoidUp, InputManager.InputKey.KeyboardAvoidDown),
+                //    inputManager.GetKeyboardAxis(InputManager.InputKey.KeyboardAvoidLeft, InputManager.InputKey.KeyboardAvoidRight));
+            }
+
         }
     }
 
