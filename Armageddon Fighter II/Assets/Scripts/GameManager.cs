@@ -58,7 +58,14 @@ public class GameManager : MonoBehaviour {
         }
         else
         {
-            PauseMenu(inputManager.GetAxis(InputManager.InputKey.LeftThumstickY), inputManager.GetButtonDown(InputManager.InputKey.Attack));
+            if (inputManager.controllerType.ToString() != "Keyboard")
+            {
+                PauseMenu(inputManager.GetAxis(InputManager.InputKey.LeftThumstickY), inputManager.GetButtonDown(InputManager.InputKey.Attack));
+            }
+            else
+            {
+                PauseMenu(inputManager.GetKeyboardAxis(InputManager.InputKey.KeyboardMoveUp, InputManager.InputKey.KeyboardMoveDown), inputManager.GetButtonDown(InputManager.InputKey.Attack));
+            }
         }
 
         if (inputManager.GetButtonDown(InputManager.InputKey.Start))
@@ -115,37 +122,37 @@ public class GameManager : MonoBehaviour {
     // TODO Refactor Pause Menu
     private void PauseMenu(float moveY, bool actionButton)
     {
-        //if (((Mathf.Abs(moveY) >= 0.5f) || (inputManager.controllerType == InputManager.ControllerType.Keyboard && (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.S)))) && selectionTimer == 0)
-        //{
-        //    if (restartUnderline.enabled)
-        //    {
-        //        restartUnderline.enabled = false;
-        //        exitUnderline.enabled = true;
-        //    }
-        //    else
-        //    {
-        //        restartUnderline.enabled = true;
-        //        exitUnderline.enabled = false;
-        //    }
+        if ((Mathf.Abs(moveY) >= 0.5f) && selectionTimer == 0)
+        {
+            if (restartUnderline.enabled)
+            {
+                restartUnderline.enabled = false;
+                exitUnderline.enabled = true;
+            }
+            else
+            {
+                restartUnderline.enabled = true;
+                exitUnderline.enabled = false;
+            }
 
-        //    selectionTimer = 30;
-        //}
-        //else if (actionButton)
-        //{
-        //    if (restartUnderline.enabled)
-        //    {
-        //        Time.timeScale = 1;
-        //        SceneManager.LoadScene("Level 1");
-        //    }
-        //    else
-        //    {
-        //        Application.Quit();
-        //    }
-        //}
+            selectionTimer = 15;
+        }
+        else if (actionButton)
+        {
+            if (restartUnderline.enabled)
+            {
+                Time.timeScale = 1;
+                SceneManager.LoadScene("Level 1");
+            }
+            else
+            {
+                Application.Quit();
+            }
+        }
 
-        //if (selectionTimer > 0)
-        //{
-        //    --selectionTimer;
-        //}
+        if (selectionTimer > 0)
+        {
+            --selectionTimer;
+        }
     }
 }

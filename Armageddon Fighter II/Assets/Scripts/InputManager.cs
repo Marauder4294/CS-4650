@@ -76,11 +76,11 @@ public class InputManager
         #region Axes
 
         new ControlInput("Left Stick X", ControllerType.PS4, InputType.AxisX, KeyCode.None),
-        new ControlInput("Left Stick Y", ControllerType.PS4, InputType.AxisY, KeyCode.None),
+        new ControlInput("Left Stick Y", ControllerType.PS4, InputType.AxisYInverted, KeyCode.None),
         new ControlInput("Right Stick X", ControllerType.PS4, InputType.Axis3, KeyCode.None),
-        new ControlInput("Right Stick Y", ControllerType.PS4, InputType.Axis4, KeyCode.None),
+        new ControlInput("Right Stick Y", ControllerType.PS4, InputType.Axis4Inverted, KeyCode.None),
         new ControlInput("D-Pad X", ControllerType.PS4, InputType.Axis7, KeyCode.None),
-        new ControlInput("D-Pad Y", ControllerType.PS4, InputType.Axis8, KeyCode.None)
+        new ControlInput("D-Pad Y", ControllerType.PS4, InputType.Axis8Inverted, KeyCode.None)
 
         #endregion
     };
@@ -105,13 +105,13 @@ public class InputManager
         #region Axes
 
         new ControlInput("Left Stick X", ControllerType.XBOX, InputType.AxisX, KeyCode.None),
-        new ControlInput("Left Stick Y", ControllerType.XBOX, InputType.AxisY, KeyCode.None),
+        new ControlInput("Left Stick Y", ControllerType.XBOX, InputType.AxisYInverted, KeyCode.None),
         new ControlInput("Right Stick X", ControllerType.XBOX, InputType.Axis4, KeyCode.None),
-        new ControlInput("Right Stick Y", ControllerType.XBOX, InputType.Axis5, KeyCode.None),
+        new ControlInput("Right Stick Y", ControllerType.XBOX, InputType.Axis5Inverted, KeyCode.None),
         new ControlInput("Left Trigger", ControllerType.XBOX, InputType.Axis9, KeyCode.None),
         new ControlInput("Right Trigger", ControllerType.XBOX, InputType.Axis10, KeyCode.None),
         new ControlInput("D-Pad X", ControllerType.XBOX, InputType.Axis6, KeyCode.None),
-        new ControlInput("D-Pad Y", ControllerType.XBOX, InputType.Axis7, KeyCode.None)
+        new ControlInput("D-Pad Y", ControllerType.XBOX, InputType.Axis7Inverted, KeyCode.None)
 
         #endregion
     };
@@ -227,7 +227,7 @@ public class InputManager
     };
 
 
-    PlayInput[] playInputs = new PlayInput[20];
+    readonly PlayInput[] playInputs = new PlayInput[20];
 
     #endregion
 

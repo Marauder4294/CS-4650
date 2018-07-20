@@ -1,32 +1,40 @@
 ﻿//using System.Collections;
 //using System.Collections.Generic;
+using System;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEditor.Animations;
 
 public class Hero : Entity {
 
     #region Hero-Specific Variable Declarations
 
-    float cameraOffsetX;
-    float cameraOffsetY;
-    float cameraOffsetZ;
+    Vector3 cameraOffset;
+
+    float attackTimerSeconds;
 
     Vector2 uiMaxHealthWhiteSize;
     Vector2 uiMaxHealthRedSize;
 
-    //float uiMaxManaWhiteWidth;
-    //float uiMaxManaBlueWidth;
-
     RectTransform uiImageHealthWhiteCurrent;
     RectTransform uiImageHealthRedCurrent;
 
+    Vector2 uiMaxManaWhiteSize;
+    Vector2 uiMaxManaBlueSize;
+
+    RectTransform uiImageManaWhiteCurrent;
+    RectTransform uiImageManaBlueCurrent;
+
     readonly float?[] attackAnimTimes = new float?[7];
+    float? landingAnimTime;
 
     BoxCollider sword;
     BoxCollider shield;
 
     CapsuleCollider sensor;
+
+    float? cameraMovementY;
 
     #endregion
 
@@ -79,6 +87,7 @@ public class Hero : Entity {
         StunTimer = -1;
         JumpTimer = -1;
         DeathTimer = -1;
+        cameraMovementY = 0;
 
         IsDead = false;
         IsAttacking = false;
@@ -105,6 +114,7 @@ public class Hero : Entity {
 
         #region Set Hero-Specific variables
 
+        attackTimerSeconds = 3;
         Image[] images = FindObjectsOfType<Image>();
 
         uiMaxHealthWhiteSize = images.First(a => a.name == "PlayerHealthBarOutline").rectTransform.sizeDelta;
@@ -113,22 +123,34 @@ public class Hero : Entity {
         uiImageHealthWhiteCurrent = images.First(a => a.name == "PlayerHealthBarOutline").rectTransform;
         uiImageHealthRedCurrent = images.First(a => a.name == "PlayerHealthBar").rectTransform;
 
-        //uiMaxManaWhiteWidth = images.First(a => a.name == "PlayerManaBarOutline").sprite.rect.size.x;
-        //uiMaxManaBlueWidth = images.First(a => a.name == "PlayerManaBar").sprite.rect.size.x;
+        uiMaxManaWhiteSize = images.First(a => a.name == "PlayerManaBarOutline").rectTransform.sizeDelta;
+        uiMaxManaBlueSize = images.First(a => a.name == "PlayerManaBar").rectTransform.sizeDelta;
+
+        uiImageManaWhiteCurrent = images.First(a => a.name == "PlayerManaBarOutline").rectTransform;
+        uiImageManaBlueCurrent = images.First(a => a.name == "PlayerManaBar").rectTransform;
 
         AnimationClip[] clip = Anim.runtimeAnimatorController.animationClips;
 
-        attackAnimTimes[1] = ((clip.First(a => a.name == "Attack_1-WindUp").length / 3) + clip.First(a => a.name == "Attack_1").length) / AttackSpeed;
-        attackAnimTimes[2] = clip.First(a => a.name == "Attack_2").length / AttackSpeed;
-        attackAnimTimes[3] = ((clip.First(a => a.name == "Attack_3-WindUp").length / 3) + clip.First(a => a.name == "Attack_3").length) / AttackSpeed;
+        ChildAnimatorStateMachine[] stateMachines = (Anim.runtimeAnimatorController as AnimatorController).layers[0].stateMachine.stateMachines;
+        AnimatorStateMachine attackStateMachine =  stateMachines.First(a => a.stateMachine.name == "Attack").stateMachine;
+        AnimatorStateMachine jumpStateMachine = stateMachines.First(a => a.stateMachine.name == "Jump").stateMachine;
+
+        attackAnimTimes[1] = ((clip.First(a => a.name == "Attack_1-WindUp").length / attackStateMachine.states.First(a => a.state.name == "Attack_1-WindUp").state.speed)
+            + clip.First(a => a.name == "Attack_1").length / attackStateMachine.states.First(a => a.state.name == "Attack_1").state.speed) / AttackSpeed;
+        attackAnimTimes[2] = (clip.First(a => a.name == "Attack_2").length / attackStateMachine.states.First(a => a.state.name == "Attack_2").state.speed) / AttackSpeed;
+        attackAnimTimes[3] = ((clip.First(a => a.name == "Attack_3-WindUp").length / attackStateMachine.states.First(a => a.state.name == "Attack_3-WindUp").state.speed)
+            + clip.First(a => a.name == "Attack_3").length / attackStateMachine.states.First(a => a.state.name == "Attack_3").state.speed) / AttackSpeed;
         attackAnimTimes[4] = attackAnimTimes[3];
-        attackAnimTimes[5] = ((clip.First(a => a.name == "Attack_4-WindUp").length / 3) + clip.First(a => a.name == "Attack_4").length) / AttackSpeed;
-        attackAnimTimes[6] = clip.First(a => a.name == "Jump_Attack").length / AttackSpeed;
+        attackAnimTimes[5] = ((clip.First(a => a.name == "Attack_4-WindUp").length / attackStateMachine.states.First(a => a.state.name == "Attack_4-WindUp").state.speed)
+            + clip.First(a => a.name == "Attack_4").length / attackStateMachine.states.First(a => a.state.name == "Attack_4").state.speed) / AttackSpeed;
+        attackAnimTimes[6] = (clip.First(a => a.name == "Jump_Attack").length / jumpStateMachine.states.First(a => a.state.name == "Jump_Attack").state.speed) / AttackSpeed;
         attackAnimTimes[0] = attackAnimTimes[1] + attackAnimTimes[2] + attackAnimTimes[3] + attackAnimTimes[4] + attackAnimTimes[5];
 
-        cameraOffsetX = Camera.main.transform.position.x - Player.transform.position.x;
-        cameraOffsetY = Camera.main.transform.position.y - Player.transform.position.y;
-        cameraOffsetZ = Camera.main.transform.position.z - Player.transform.position.z;
+        landingAnimTime = clip.First(a => a.name == "Jump_Landing").length / jumpStateMachine.states.First(a => a.state.name == "Jump_Landing").state.speed;
+
+        cameraOffset = new Vector3(Camera.main.transform.position.x - Player.transform.position.x, 
+            Camera.main.transform.position.y - Player.transform.position.y, 
+            Camera.main.transform.position.z - Player.transform.position.z);
 
         sword = Player.transform.Find("Dack/root/pelvis/spine01/spine02/spine03/clavicle_R/upperarm_R/lowerarm_R/hand_R").GetComponent<BoxCollider>();
         shield = Player.transform.Find("Dack/root/pelvis/spine01/spine02/spine03/clavicle_L/upperarm_L/lowerarm_L/hand_L").GetComponent<BoxCollider>();
@@ -140,12 +162,14 @@ public class Hero : Entity {
         #endregion
     }
 
+    private object FindObjectsOfTypeAll()
+    {
+        throw new NotImplementedException();
+    }
+
     private void OnDestroy()
     {
-        EventManager.OnAttack -= OnAttack;
-        EventManager.OnJump -= OnJump;
-        EventManager.OnBlock -= OnBlock;
-        EventManager.OnMove -= OnMove;
+        UnsubscribeEvents();
     }
 
     public void OnMove(float moveX, float moveY)
@@ -180,9 +204,8 @@ public class Hero : Entity {
             DecrementStunTimer();
             JumpUp();
 
-
             if (!IsBlocking || IsKnockedDown)
-                Camera.main.transform.position = new Vector3(Player.transform.position.x + cameraOffsetX, Camera.main.transform.position.y, Player.transform.position.z + cameraOffsetZ);
+                Camera.main.transform.position = new Vector3(Player.transform.position.x + cameraOffset.x, Camera.main.transform.position.y, Player.transform.position.z + cameraOffset.z);
         }
         else
         {
@@ -221,7 +244,8 @@ public class Hero : Entity {
                 }
 
                 Rigid.isKinematic = true;
-                JumpTimer = 1;
+                JumpTimer = landingAnimTime ?? 0;
+                MoveTimer = JumpTimer;
             }
             else if (other.gameObject.tag == "DeathBoundary")
             {
@@ -286,8 +310,10 @@ public class Hero : Entity {
             }
             else if (other.gameObject.tag == "Ground" && Mathf.Abs(Player.transform.position.y - PositionY) > 0.1)
             {
-                PositionY = Player.transform.position.y;
-                Camera.main.transform.position = new Vector3(Player.transform.position.x + cameraOffsetX, PositionY + cameraOffsetY, Player.transform.position.z + cameraOffsetZ);
+                PositionY = (PositionY < Player.transform.position.y) ? PositionY + 0.04f : PositionY - 0.04f;
+
+                //PositionY = Player.transform.position.y;
+                Camera.main.transform.position = new Vector3(Player.transform.position.x + cameraOffset.x, PositionY + cameraOffset.y, Player.transform.position.z + cameraOffset.z);
             }
         }
     }
@@ -305,7 +331,7 @@ public class Hero : Entity {
             {
                 AttackCount++;
                 AttackLockTimer = attackAnimTimes[AttackCount] ?? 0;
-                AttackTimer = (AttackCount == 1) ? AttackLockTimer : 6 / AttackSpeed;
+                AttackTimer = (AttackCount == 1) ? AttackLockTimer : attackTimerSeconds / AttackSpeed;
                 MoveTimer = AttackLockTimer;
                 JumpTimer = AttackLockTimer;
                 sword.enabled = true;
@@ -410,6 +436,14 @@ public class Hero : Entity {
     //    //Anim.SetFloat("AvoidSpeed", (MovementSpeed * 14f) * ((System.Math.Abs(avoidX) + System.Math.Abs(avoidY))) / 2);
     //}
 
+    void UnsubscribeEvents()
+    {
+        EventManager.OnAttack -= OnAttack;
+        EventManager.OnJump -= OnJump;
+        EventManager.OnBlock -= OnBlock;
+        EventManager.OnMove -= OnMove;
+    }
+
     #region Entity Method Overrides
 
     protected override void DecrementAttackLockTimer()
@@ -426,7 +460,7 @@ public class Hero : Entity {
                 AttackCount++;
                 Anim.SetInteger("AttackNumber", AttackCount);
                 AttackLockTimer = attackAnimTimes[AttackCount] ?? 0;
-                AttackTimer = 6 / AttackSpeed;
+                AttackTimer = attackTimerSeconds / AttackSpeed;
             }
             else
             {
@@ -485,10 +519,7 @@ public class Hero : Entity {
 
                 if (IsDead)
                 {
-                    EventManager.OnAttack -= OnAttack;
-                    EventManager.OnJump -= OnJump;
-                    EventManager.OnBlock -= OnBlock;
-                    EventManager.OnMove -= OnMove;
+                    UnsubscribeEvents();
                 }
             }
         }

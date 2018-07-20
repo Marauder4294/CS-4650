@@ -202,7 +202,7 @@ public class Zombie : Entity
                 InAir = false;
                 Rigid.isKinematic = true;
             }
-            else if (other.gameObject.tag == "DeathBoundary" && IsActive)
+            else if (other.gameObject.tag == "DeathBoundary")
             {
                 Destroy(gameObject);
             }
