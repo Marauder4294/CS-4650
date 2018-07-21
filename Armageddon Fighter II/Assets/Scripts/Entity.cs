@@ -50,6 +50,7 @@ public class Entity : MonoBehaviour {
 
     #region Combat Fields
 
+    protected int Datage { get; set; }
     protected bool IsAttacking { get; set; }
     protected bool NextAttack { get; set; }
     protected bool IsBlocking { get; set; }
@@ -130,6 +131,19 @@ public class Entity : MonoBehaviour {
         }
     }
 
+    public void MagicDamage(Entity other, string type)
+    {
+        Health = (MagicResist != 0) ? (int)(Health - other.Magic * ((100f - MagicResist) / 100f)) : Health - other.Magic;
+
+        Stun();
+        TakeHealth();
+
+        if (Health <= 0)
+        {
+            Death(other);
+        }
+    }
+
     protected void Stun()
     {
         Anim.SetBool("Attacking", false);
@@ -185,6 +199,11 @@ public class Entity : MonoBehaviour {
     protected virtual void TakeHealth()
     {
         
+    }
+
+    protected virtual void TakeMana(int cost)
+    {
+
     }
 
     protected virtual void DecrementStunTimer()

@@ -190,7 +190,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 100000, guid: b966fefceaf39294c8edce0afe29bab8, type: 3}
       propertyPath: m_TagString
-      value: Untagged
+      value: Body
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: b966fefceaf39294c8edce0afe29bab8, type: 3}
@@ -762,6 +762,12 @@ Prefab:
       propertyPath: m_RootOrder
       value: 4
       objectReference: {fileID: 0}
+    - target: {fileID: 114222258828780694, guid: bc90ebc627aa70e48be3485d3c598ed5,
+        type: 2}
+      propertyPath: lightning
+      value: 
+      objectReference: {fileID: 1922248428874114, guid: e0ae27d29a9a4684f9b096cba8d92fed,
+        type: 2}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: bc90ebc627aa70e48be3485d3c598ed5, type: 2}
   m_IsPrefabParent: 0

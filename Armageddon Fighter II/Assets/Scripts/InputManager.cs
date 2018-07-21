@@ -264,6 +264,7 @@ public class InputManager
         playInputs[(int)InputKey.Block] = new PlayInput(InputKey.Block, PS4controlInputs.First(a => a.inputName == "L2"));
         playInputs[(int)InputKey.Jump] = new PlayInput(InputKey.Jump, PS4controlInputs.First(a => a.inputName == "Square"));
         playInputs[(int)InputKey.Start] = new PlayInput(InputKey.Start, PS4controlInputs.First(a => a.inputName == "Options"));
+        playInputs[(int)InputKey.MagicOne] = new PlayInput(InputKey.MagicOne, PS4controlInputs.First(a => a.inputName == "Triangle"));
         playInputs[(int)InputKey.LeftThumstickX] = new PlayInput(InputKey.LeftThumstickX, PS4controlInputs.First(a => a.inputName == "Left Stick X"));
         playInputs[(int)InputKey.LeftThumstickY] = new PlayInput(InputKey.LeftThumstickY, PS4controlInputs.First(a => a.inputName == "Left Stick Y"));
         playInputs[(int)InputKey.RightThumstickX] = new PlayInput(InputKey.RightThumstickX, PS4controlInputs.First(a => a.inputName == "Right Stick X"));
@@ -278,6 +279,7 @@ public class InputManager
         playInputs[(int)InputKey.Block] = new PlayInput(InputKey.Block, XBOXcontrolInputs.First(a => a.inputName == "Y"));
         playInputs[(int)InputKey.Jump] = new PlayInput(InputKey.Jump, XBOXcontrolInputs.First(a => a.inputName == "X"));
         playInputs[(int)InputKey.Start] = new PlayInput(InputKey.Start, XBOXcontrolInputs.First(a => a.inputName == "Start"));
+        playInputs[(int)InputKey.MagicOne] = new PlayInput(InputKey.MagicOne, XBOXcontrolInputs.First(a => a.inputName == "B"));
         playInputs[(int)InputKey.LeftThumstickX] = new PlayInput(InputKey.LeftThumstickX, XBOXcontrolInputs.First(a => a.inputName == "Left Stick X"));
         playInputs[(int)InputKey.LeftThumstickY] = new PlayInput(InputKey.LeftThumstickY, XBOXcontrolInputs.First(a => a.inputName == "Left Stick Y"));
         playInputs[(int)InputKey.RightThumstickX] = new PlayInput(InputKey.RightThumstickX, XBOXcontrolInputs.First(a => a.inputName == "Right Stick X"));
@@ -291,6 +293,7 @@ public class InputManager
         playInputs[(int)InputKey.Attack] = new PlayInput(InputKey.Attack, KeyboardcontrolInputs.First(a => a.inputName == "Right Control"));
         playInputs[(int)InputKey.Block] = new PlayInput(InputKey.Block, KeyboardcontrolInputs.First(a => a.inputName == "Right Shift"));
         playInputs[(int)InputKey.Jump] = new PlayInput(InputKey.Jump, KeyboardcontrolInputs.First(a => a.inputName == "Space"));
+        playInputs[(int)InputKey.MagicOne] = new PlayInput(InputKey.MagicOne, KeyboardcontrolInputs.First(a => a.inputName == "Keypad 1"));
         playInputs[(int)InputKey.Start] = new PlayInput(InputKey.Start, KeyboardcontrolInputs.First(a => a.inputName == "Return/Enter"));
 
         #region Custom Keyboard Input Control
@@ -305,8 +308,6 @@ public class InputManager
         playInputs[(int)InputKey.KeyboardAvoidRight] = new PlayInput(InputKey.KeyboardAvoidRight, KeyboardcontrolInputs.First(a => a.inputName == "Right Arrow"));
 
         #endregion
-
-        //TODO Add Axis buttons for keyboard movement
     }
 
     public bool GetButtonDown(InputKey button)

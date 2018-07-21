@@ -12,6 +12,8 @@ public class Hero : Entity {
 
     Vector3 cameraOffset;
 
+    public GameObject lightning;
+
     float attackTimerSeconds;
 
     Vector2 uiMaxHealthWhiteSize;
@@ -34,8 +36,6 @@ public class Hero : Entity {
 
     CapsuleCollider sensor;
 
-    float? cameraMovementY;
-
     #endregion
 
     void Awake()
@@ -54,14 +54,14 @@ public class Hero : Entity {
         Level = 1;
 
         Power = 15;
-        Magic = 5;
+        Magic = 14;
         Defense = 10;
         MagicResist = 0;
         Block = 10;
         Vitality = 19;
 
         MaxHealth = (Vitality * 2) + (Level * 2);
-        MaxMana = Magic;
+        MaxMana = Magic + Level;
 
         Health = MaxHealth;
         Mana = MaxMana;
@@ -87,7 +87,6 @@ public class Hero : Entity {
         StunTimer = -1;
         JumpTimer = -1;
         DeathTimer = -1;
-        cameraMovementY = 0;
 
         IsDead = false;
         IsAttacking = false;
@@ -107,6 +106,7 @@ public class Hero : Entity {
         EventManager.OnAttack += OnAttack;
         EventManager.OnJump += OnJump;
         EventManager.OnBlock += OnBlock;
+        EventManager.OnLightning += OnLightning;
         EventManager.OnMove += OnMove;
         //EventManager.OnAvoid += OnAvoid;
 
@@ -311,8 +311,6 @@ public class Hero : Entity {
             else if (other.gameObject.tag == "Ground" && Mathf.Abs(Player.transform.position.y - PositionY) > 0.1)
             {
                 PositionY = (PositionY < Player.transform.position.y) ? PositionY + 0.04f : PositionY - 0.04f;
-
-                //PositionY = Player.transform.position.y;
                 Camera.main.transform.position = new Vector3(Player.transform.position.x + cameraOffset.x, PositionY + cameraOffset.y, Player.transform.position.z + cameraOffset.z);
             }
         }
@@ -417,6 +415,22 @@ public class Hero : Entity {
         }
     }
 
+    public void OnLightning(bool isAction)
+    {
+        if (Mana >= 5)
+        {
+            var projectile = Instantiate(lightning);
+            projectile.transform.position = new Vector3(Player.transform.position.x + (Player.transform.forward.x / 2), Player.transform.position.y + 0.5f, Player.transform.position.z + (Player.transform.forward.z / 2));
+            projectile.transform.forward = Player.transform.forward;
+            //projectile.transform.eulerAngles = new Vector3(projectile.transform.eulerAngles.x, 0, projectile.transform.eulerAngles.z);
+
+            projectile.GetComponent<Magic>().Ent = Ent;
+            projectile.GetComponent<Magic>().Type = "Lightning";
+
+            TakeMana(0);
+        }
+    }
+
     //public void OnAvoid(float avoidX, float avoidY)
     //{
     //    IsMoving = ((avoidX != 0 || avoidY != 0) && MoveTimer == 0) ? true : false;
@@ -441,7 +455,9 @@ public class Hero : Entity {
         EventManager.OnAttack -= OnAttack;
         EventManager.OnJump -= OnJump;
         EventManager.OnBlock -= OnBlock;
+        EventManager.OnLightning -= OnLightning;
         EventManager.OnMove -= OnMove;
+        //EventManager.OnAvoid -= OnAvoid;
     }
 
     #region Entity Method Overrides
@@ -480,6 +496,16 @@ public class Hero : Entity {
         uiImageHealthRedCurrent.sizeDelta = new Vector2(uiMaxHealthRedSize.x * currentHealth - ((uiMaxHealthWhiteSize.x - uiMaxHealthRedSize.x) / 2), uiMaxHealthRedSize.y);
     }
 
+    protected override void TakeMana(int cost)
+    {
+        Mana -= cost;
+
+        float currentMana = (float)Mana / MaxMana;
+
+        uiImageManaWhiteCurrent.sizeDelta = new Vector2(uiMaxManaWhiteSize.x * currentMana, uiMaxManaWhiteSize.y);
+        uiImageManaBlueCurrent.sizeDelta = new Vector2(uiMaxManaBlueSize.x * currentMana - ((uiMaxManaBlueSize.x - uiMaxManaBlueSize.x) / 2), uiMaxManaBlueSize.y);
+    }
+
     protected override void DecrementDeathTimer()
     {
         if (DeathTimer > 0)
@@ -498,7 +524,7 @@ public class Hero : Entity {
         {
             if (IsGoingUp)
             {
-                if (Ent.transform.position.y >= KnockbackPowerHeight)
+                if (Player.transform.position.y >= KnockbackPowerHeight)
                 {
                     IsGoingUp = false;
                     movement.y = 0;

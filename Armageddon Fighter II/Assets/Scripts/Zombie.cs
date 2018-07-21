@@ -44,51 +44,26 @@ public class Zombie : Entity
 
         #region Base Attribute Setter
 
-        // Master Zombie code for Alpha Presentation only...
+        Level = 1;
 
-        if (name != "Master Zombie")
-        {
-            Level = 1;
+        Power = 15;
+        Magic = 0;
+        Defense = 5;
+        MagicResist = 0;
+        Block = 0;
+        Vitality = 50;
 
-            Power = 15;
-            Magic = 0;
-            Defense = 5;
-            MagicResist = 0;
-            Block = 0;
-            Vitality = 50;
+        MaxHealth = Vitality;
+        Health = MaxHealth;
 
-            MaxHealth = Vitality;
-            Health = MaxHealth;
+        MaxAttackNumber = 2;
 
-            MaxAttackNumber = 2;
-
-            KnockbackPowerHeight = 2f;
-            KnockbackPowerLength = 4.5f;
-        }
-        else
-        {
-            Level = 5;
-
-            Power = 30;
-            Magic = 0;
-            Defense = 10;
-            MagicResist = 0;
-            Block = 0;
-            Vitality = 100;
-
-            MaxHealth = Vitality;
-            Health = MaxHealth;
-
-            MaxAttackNumber = 1;
-
-            KnockbackPowerHeight = 1f;
-            KnockbackPowerLength = 3f;
-        }
-        
+        KnockbackPowerHeight = 2f;
+        KnockbackPowerLength = 4.5f;
 
         #endregion
 
-        
+
 
         leftHand = zombie.transform.Find("Zombie/root/pelvis/spine01/spine02/spine03/clavicle_L/upperarm_L/lowerarm_L/hand_L").GetComponent<BoxCollider>();
         rightHand = zombie.transform.Find("Zombie/root/pelvis/spine01/spine02/spine03/clavicle_R/upperarm_R/lowerarm_R/hand_R").GetComponent<BoxCollider>();

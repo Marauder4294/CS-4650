@@ -65,6 +65,8 @@
     <Compile Include="Assets\Scripts\GameManager.cs" />
     <Compile Include="Assets\Scripts\Hero.cs" />
     <Compile Include="Assets\Scripts\InputManager.cs" />
+    <Compile Include="Assets\Scripts\Lightning.cs" />
+    <Compile Include="Assets\Scripts\Magic.cs" />
     <Compile Include="Assets\Scripts\Zombie.cs" />
     <None Include="Assets\Materials\Shaders\Rim Outline.shader" />
     <None Include="Assets\Materials\Shaders\Rim Lighting.shader" />

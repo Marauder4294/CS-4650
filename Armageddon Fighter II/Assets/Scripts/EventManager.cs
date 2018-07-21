@@ -10,6 +10,7 @@ public class EventManager {
     public static event HeroBoolEvent OnAttack;
     public static event HeroBoolEvent OnJump;
     public static event HeroBoolEvent OnBlock;
+    public static event HeroBoolEvent OnLightning;
 
     public delegate void HeroMovementEvent(float moveX, float moveY);
     public static event HeroMovementEvent OnMove;
@@ -35,6 +36,12 @@ public class EventManager {
     {
         if (OnBlock != null)
             OnBlock(isAction);
+    }
+
+    public static void LightningInitiated(bool isAction)
+    {
+        if (OnLightning != null)
+            OnLightning(isAction);
     }
 
     public static void MoveInitiated(float moveX, float moveY)

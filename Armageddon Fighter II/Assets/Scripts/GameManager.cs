@@ -52,6 +52,10 @@ public class GameManager : MonoBehaviour {
                 {
                     EventManager.JumpInitiated(true);
                 }
+                else if (inputManager.GetButtonDown(InputManager.InputKey.MagicOne))
+                {
+                    EventManager.LightningInitiated(true);
+                }
 
                 EventManager.BlockInitiated(inputManager.GetButton(InputManager.InputKey.Block));
             }
