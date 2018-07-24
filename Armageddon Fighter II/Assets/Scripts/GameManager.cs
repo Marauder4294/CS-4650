@@ -88,7 +88,7 @@ public class GameManager : MonoBehaviour {
         {
             if (inputManager.controllerType.ToString() != "Keyboard")
             {
-                EventManager.MoveInitiated(inputManager.GetAxis(InputManager.InputKey.LeftThumstickY), inputManager.GetAxis(InputManager.InputKey.LeftThumstickX));
+                EventManager.MoveInitiated(inputManager.GetAxis(InputManager.InputKey.LeftThumstickX), inputManager.GetAxis(InputManager.InputKey.LeftThumstickY));
                 //EventManager.AvoidInitiated(Input.GetAxis(inputManager.RightThumstickY), Input.GetAxis(inputManager.RightThumstickX));
             }
             else

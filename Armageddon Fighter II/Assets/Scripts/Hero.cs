@@ -11,6 +11,7 @@ public class Hero : Entity {
     #region Hero-Specific Variable Declarations
 
     Vector3 cameraOffset;
+    float cameraRotationOffSetY;
 
     public GameObject lightning;
 
@@ -172,19 +173,16 @@ public class Hero : Entity {
             Camera.main.transform.position.y - Player.transform.position.y, 
             Camera.main.transform.position.z - Player.transform.position.z);
 
+        cameraRotationOffSetY = 28;//Camera.main.transform.eulerAngles.y - 180;
+
         sword = Player.transform.Find("Dack/root/pelvis/spine01/spine02/spine03/clavicle_R/upperarm_R/lowerarm_R/hand_R").GetComponent<BoxCollider>();
         shield = Player.transform.Find("Dack/root/pelvis/spine01/spine02/spine03/clavicle_L/upperarm_L/lowerarm_L/hand_L").GetComponent<BoxCollider>();
-
+        
         sensor = Player.GetComponent<CapsuleCollider>();
 
         sword.enabled = false;
 
         #endregion
-    }
-
-    private object FindObjectsOfTypeAll()
-    {
-        throw new NotImplementedException();
     }
 
     private void OnDestroy()
@@ -200,12 +198,13 @@ public class Hero : Entity {
 
             if (IsMoving)
             {
+                Player.transform.LookAt(new Vector3(Player.transform.position.x + moveX, Player.transform.position.y, Player.transform.position.z + moveY));
+                Player.transform.eulerAngles = new Vector3(0, Player.transform.eulerAngles.y + cameraRotationOffSetY, 0);
+
                 if (!IsTouchingBoundary && !IsBlocking)
                 {
-                    Player.transform.LookAt(Player.transform.position += new Vector3(-moveY * MovementSpeed, 0, -moveX * MovementSpeed));
+                    Player.transform.position += new Vector3((Player.transform.forward.x * MovementSpeed), 0, (Player.transform.forward.z * MovementSpeed));
                 }
-                
-                Player.transform.forward += new Vector3(-moveY, 0, -moveX);
             }
             else if ((moveX != 0 || moveY != 0) && IsKnockedDown && !IsFallingBack)
             {
@@ -440,9 +439,7 @@ public class Hero : Entity {
         if (Mana >= MagicOneCost)
         {
             GameObject projectile = Instantiate(lightning);
-            projectile.transform.position = new Vector3(Player.transform.position.x + (Player.transform.forward.x / 2),
-                Player.transform.position.y + 0.5f,
-                Player.transform.position.z + (Player.transform.forward.z / 2));
+            projectile.transform.position = Player.transform.Find("Dack/root/pelvis/spine01/spine02/spine03/clavicle_L/upperarm_L/lowerarm_L/hand_L").transform.position;
 
             projectile.transform.forward = Player.transform.forward;
 

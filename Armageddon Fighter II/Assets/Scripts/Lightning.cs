@@ -13,7 +13,7 @@ public class Lightning : Magic {
 
     void FixedUpdate ()
     {
-        lightning.transform.position += transform.forward;
+        lightning.transform.position += lightning.transform.forward;
 	}
 
     private void OnTriggerEnter(Collider other)
