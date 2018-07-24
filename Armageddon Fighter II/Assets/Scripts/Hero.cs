@@ -4,7 +4,7 @@ using System;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEditor.Animations;
+//using UnityEditor.Animations;
 
 public class Hero : Entity {
 
@@ -30,6 +30,7 @@ public class Hero : Entity {
 
     readonly float?[] attackAnimTimes = new float?[7];
     float? landingAnimTime;
+    readonly float?[] magicAnimTimes = new float?[2];
 
     BoxCollider sword;
     BoxCollider shield;
@@ -65,6 +66,10 @@ public class Hero : Entity {
 
         Health = MaxHealth;
         Mana = MaxMana;
+
+        MagicOneCost = 1;
+        MagicTwoCost = 15;
+        MagicThreeCost = 50;
 
         #endregion
 
@@ -131,22 +136,37 @@ public class Hero : Entity {
 
         AnimationClip[] clip = Anim.runtimeAnimatorController.animationClips;
 
-        ChildAnimatorStateMachine[] stateMachines = (Anim.runtimeAnimatorController as AnimatorController).layers[0].stateMachine.stateMachines;
-        AnimatorStateMachine attackStateMachine =  stateMachines.First(a => a.stateMachine.name == "Attack").stateMachine;
-        AnimatorStateMachine jumpStateMachine = stateMachines.First(a => a.stateMachine.name == "Jump").stateMachine;
+        //ChildAnimatorStateMachine[] stateMachines = (Anim.runtimeAnimatorController as AnimatorController).layers[0].stateMachine.stateMachines;
+        //AnimatorStateMachine attackStateMachine =  stateMachines.First(a => a.stateMachine.name == "Attack").stateMachine;
+        //AnimatorStateMachine jumpStateMachine = stateMachines.First(a => a.stateMachine.name == "Jump").stateMachine;
 
-        attackAnimTimes[1] = ((clip.First(a => a.name == "Attack_1-WindUp").length / attackStateMachine.states.First(a => a.state.name == "Attack_1-WindUp").state.speed)
-            + clip.First(a => a.name == "Attack_1").length / attackStateMachine.states.First(a => a.state.name == "Attack_1").state.speed) / AttackSpeed;
-        attackAnimTimes[2] = (clip.First(a => a.name == "Attack_2").length / attackStateMachine.states.First(a => a.state.name == "Attack_2").state.speed) / AttackSpeed;
-        attackAnimTimes[3] = ((clip.First(a => a.name == "Attack_3-WindUp").length / attackStateMachine.states.First(a => a.state.name == "Attack_3-WindUp").state.speed)
-            + clip.First(a => a.name == "Attack_3").length / attackStateMachine.states.First(a => a.state.name == "Attack_3").state.speed) / AttackSpeed;
+        //attackAnimTimes[1] = ((clip.First(a => a.name == "Attack_1-WindUp").length / attackStateMachine.states.First(a => a.state.name == "Attack_1-WindUp").state.speed)
+        //    + clip.First(a => a.name == "Attack_1").length / attackStateMachine.states.First(a => a.state.name == "Attack_1").state.speed) / AttackSpeed;
+        //attackAnimTimes[2] = (clip.First(a => a.name == "Attack_2").length / attackStateMachine.states.First(a => a.state.name == "Attack_2").state.speed) / AttackSpeed;
+        //attackAnimTimes[3] = ((clip.First(a => a.name == "Attack_3-WindUp").length / attackStateMachine.states.First(a => a.state.name == "Attack_3-WindUp").state.speed)
+        //    + clip.First(a => a.name == "Attack_3").length / attackStateMachine.states.First(a => a.state.name == "Attack_3").state.speed) / AttackSpeed;
+        //attackAnimTimes[4] = attackAnimTimes[3];
+        //attackAnimTimes[5] = ((clip.First(a => a.name == "Attack_4-WindUp").length / attackStateMachine.states.First(a => a.state.name == "Attack_4-WindUp").state.speed)
+        //    + clip.First(a => a.name == "Attack_4").length / attackStateMachine.states.First(a => a.state.name == "Attack_4").state.speed) / AttackSpeed;
+        //attackAnimTimes[6] = (clip.First(a => a.name == "Jump_Attack").length / jumpStateMachine.states.First(a => a.state.name == "Jump_Attack").state.speed) / AttackSpeed;
+        //attackAnimTimes[0] = attackAnimTimes[1] + attackAnimTimes[2] + attackAnimTimes[3] + attackAnimTimes[4] + attackAnimTimes[5];
+
+        attackAnimTimes[1] = ((clip.First(a => a.name == "Attack_1-WindUp").length / 3)
+            + clip.First(a => a.name == "Attack_1").length / 1) / AttackSpeed;
+        attackAnimTimes[2] = (clip.First(a => a.name == "Attack_2").length / 1) / AttackSpeed;
+        attackAnimTimes[3] = ((clip.First(a => a.name == "Attack_3-WindUp").length / 3)
+            + clip.First(a => a.name == "Attack_3").length / 1) / AttackSpeed;
         attackAnimTimes[4] = attackAnimTimes[3];
-        attackAnimTimes[5] = ((clip.First(a => a.name == "Attack_4-WindUp").length / attackStateMachine.states.First(a => a.state.name == "Attack_4-WindUp").state.speed)
-            + clip.First(a => a.name == "Attack_4").length / attackStateMachine.states.First(a => a.state.name == "Attack_4").state.speed) / AttackSpeed;
-        attackAnimTimes[6] = (clip.First(a => a.name == "Jump_Attack").length / jumpStateMachine.states.First(a => a.state.name == "Jump_Attack").state.speed) / AttackSpeed;
+        attackAnimTimes[5] = ((clip.First(a => a.name == "Attack_4-WindUp").length / 3)
+            + clip.First(a => a.name == "Attack_4").length / 1) / AttackSpeed;
+        attackAnimTimes[6] = (clip.First(a => a.name == "Jump_Attack").length / 1) / AttackSpeed;
         attackAnimTimes[0] = attackAnimTimes[1] + attackAnimTimes[2] + attackAnimTimes[3] + attackAnimTimes[4] + attackAnimTimes[5];
 
-        landingAnimTime = clip.First(a => a.name == "Jump_Landing").length / jumpStateMachine.states.First(a => a.state.name == "Jump_Landing").state.speed;
+        landingAnimTime = clip.First(a => a.name == "Jump_Landing").length / 5;
+
+        //magicAnimTimes[1] = (clip.First(a => a.name == "Magic_One").length / 
+        //    (Anim.runtimeAnimatorController as AnimatorController).layers[0].stateMachine.states.First(a => a.state.name == "Magic_One").state.speed) / AttackSpeed;
+        //magicAnimTimes[0] = magicAnimTimes[1];
 
         cameraOffset = new Vector3(Camera.main.transform.position.x - Player.transform.position.x, 
             Camera.main.transform.position.y - Player.transform.position.y, 
@@ -417,17 +437,19 @@ public class Hero : Entity {
 
     public void OnLightning(bool isAction)
     {
-        if (Mana >= 5)
+        if (Mana >= MagicOneCost)
         {
-            var projectile = Instantiate(lightning);
-            projectile.transform.position = new Vector3(Player.transform.position.x + (Player.transform.forward.x / 2), Player.transform.position.y + 0.5f, Player.transform.position.z + (Player.transform.forward.z / 2));
+            GameObject projectile = Instantiate(lightning);
+            projectile.transform.position = new Vector3(Player.transform.position.x + (Player.transform.forward.x / 2),
+                Player.transform.position.y + 0.5f,
+                Player.transform.position.z + (Player.transform.forward.z / 2));
+
             projectile.transform.forward = Player.transform.forward;
-            //projectile.transform.eulerAngles = new Vector3(projectile.transform.eulerAngles.x, 0, projectile.transform.eulerAngles.z);
 
             projectile.GetComponent<Magic>().Ent = Ent;
             projectile.GetComponent<Magic>().Type = "Lightning";
 
-            TakeMana(0);
+            TakeMana(MagicOneCost);
         }
     }
 

@@ -19,9 +19,8 @@ public class Body : MonoBehaviour {
         else if (other.gameObject.tag == "Magic")
         {
             Magic magic = other.gameObject.GetComponent<Magic>();
-            string entityTag = gameObject.transform.parent.name;
 
-            if (magic.Ent.name != entityTag)
+            if (magic.Ent.name != gameObject.transform.parent.name)
             {
                 entity.MagicDamage(magic.Ent, magic.Type);
             }

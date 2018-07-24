@@ -310,6 +310,40 @@ public class InputManager
         #endregion
     }
 
+    public void SetUIButtons(UnityEngine.UI.RawImage[] rawImages, Texture[] textures)
+    {
+        if (controllerType == ControllerType.PS4)
+        {
+            rawImages.First(a => a.name == "AttackButton").texture = textures.First(a => a.name == "PS4 X Button");
+            rawImages.First(a => a.name == "BlockButton").texture = textures.First(a => a.name == "PS4 L2 Button");
+            rawImages.First(a => a.name == "JumpButton").texture = textures.First(a => a.name == "PS4 Square Button");
+            rawImages.First(a => a.name == "LightningButton").texture = textures.First(a => a.name == "PS4 Triangle Button");
+
+            rawImages.First(a => a.name == "RestartHighlight").texture = textures.First(a => a.name == "PS4 X Button");
+            rawImages.First(a => a.name == "ExitHighlight").texture = textures.First(a => a.name == "PS4 X Button");
+        }
+        else if (controllerType == ControllerType.XBOX)
+        {
+            rawImages.First(a => a.name == "AttackButton").texture = textures.First(a => a.name == "XBOX A Button");
+            rawImages.First(a => a.name == "BlockButton").texture = textures.First(a => a.name == "XBOX Y Button");
+            rawImages.First(a => a.name == "JumpButton").texture = textures.First(a => a.name == "XBOX X Button");
+            rawImages.First(a => a.name == "LightningButton").texture = textures.First(a => a.name == "XBOX B Button");
+
+            rawImages.First(a => a.name == "RestartHighlight").texture = textures.First(a => a.name == "XBOX A Button");
+            rawImages.First(a => a.name == "ExitHighlight").texture = textures.First(a => a.name == "XBOX A Button");
+        }
+        else
+        {
+            rawImages.First(a => a.name == "AttackButton").texture = textures.First(a => a.name == "Keyboard Right Control Button");
+            rawImages.First(a => a.name == "BlockButton").texture = textures.First(a => a.name == "Keyboard Right Shift Button");
+            rawImages.First(a => a.name == "JumpButton").texture = textures.First(a => a.name == "Keyboard Space Button");
+            rawImages.First(a => a.name == "LightningButton").texture = textures.First(a => a.name == "Keyboard Keypad 1 Button");
+
+            rawImages.First(a => a.name == "RestartHighlight").texture = textures.First(a => a.name == "Keyboard Right Control Button");
+            rawImages.First(a => a.name == "ExitHighlight").texture = textures.First(a => a.name == "Keyboard Right Control Button");
+        }
+    }
+
     public bool GetButtonDown(InputKey button)
     {
         if (playInputs[(int)button].controlInput.inputType == InputType.Button)

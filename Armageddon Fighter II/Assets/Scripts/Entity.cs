@@ -36,6 +36,10 @@ public class Entity : MonoBehaviour {
     protected int MaxMana { get; set; }
     protected int Mana { get; set; }
 
+    protected int MagicOneCost { get; set; }
+    protected int MagicTwoCost { get; set; }
+    protected int MagicThreeCost { get; set; }
+
     #endregion
 
     #region Movement Fields

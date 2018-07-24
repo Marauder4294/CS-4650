@@ -13,8 +13,8 @@ public class GameManager : MonoBehaviour {
     bool isPaused;
 
     GameObject pauseMenu;
-    Image restartUnderline;
-    Image exitUnderline;
+    RawImage restartHighlight;
+    RawImage exitHighlight;
 
     int selectionTimer;
 
@@ -26,14 +26,18 @@ public class GameManager : MonoBehaviour {
         isPaused = false;
 
         Image[] images = FindObjectsOfType<Image>();
+        RawImage[] rawImages = FindObjectsOfType<RawImage>();
+        Texture[] textures = Resources.LoadAll("Buttons", typeof(Texture)).Cast<Texture>().ToArray();
+
+        inputManager.SetUIButtons(rawImages, textures);
 
         pauseMenu = FindObjectsOfType<GameObject>().First(a => a.name == "PauseMenu");
-        restartUnderline = images.First(a => a.name == "RestartUnderline");
-        exitUnderline = images.First(a => a.name == "ExitUnderline");
+        restartHighlight = rawImages.First(a => a.name == "RestartHighlight");
+        exitHighlight = rawImages.First(a => a.name == "ExitHighlight");
 
         pauseMenu.SetActive(false);
-        restartUnderline.enabled = false;
-        exitUnderline.enabled = false;
+        restartHighlight.enabled = false;
+        exitHighlight.enabled = false;
 
         selectionTimer = 0;
     }
@@ -107,8 +111,8 @@ public class GameManager : MonoBehaviour {
             Time.timeScale = 0;
 
             pauseMenu.SetActive(true);
-            restartUnderline.enabled = true;
-            exitUnderline.enabled = false;
+            restartHighlight.enabled = true;
+            exitHighlight.enabled = false;
         }
         else
         {
@@ -117,8 +121,8 @@ public class GameManager : MonoBehaviour {
             Time.timeScale = 1;
 
             pauseMenu.SetActive(false);
-            restartUnderline.enabled = false;
-            exitUnderline.enabled = false;
+            restartHighlight.enabled = false;
+            exitHighlight.enabled = false;
         }
     }
 
@@ -128,22 +132,22 @@ public class GameManager : MonoBehaviour {
     {
         if ((Mathf.Abs(moveY) >= 0.5f) && selectionTimer == 0)
         {
-            if (restartUnderline.enabled)
+            if (restartHighlight.enabled)
             {
-                restartUnderline.enabled = false;
-                exitUnderline.enabled = true;
+                restartHighlight.enabled = false;
+                exitHighlight.enabled = true;
             }
             else
             {
-                restartUnderline.enabled = true;
-                exitUnderline.enabled = false;
+                restartHighlight.enabled = true;
+                exitHighlight.enabled = false;
             }
 
             selectionTimer = 15;
         }
         else if (actionButton)
         {
-            if (restartUnderline.enabled)
+            if (restartHighlight.enabled)
             {
                 Time.timeScale = 1;
                 SceneManager.LoadScene("Level 1");

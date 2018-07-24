@@ -41,25 +41,50 @@ public class Zombie : Entity
         StunTimer = -1;
         FallBackTimer = -1;
         DeathTimer = -1;
+        KnockDownTimer = -1;
 
         #region Base Attribute Setter
 
-        Level = 1;
+        // For beta only
 
-        Power = 15;
-        Magic = 0;
-        Defense = 5;
-        MagicResist = 0;
-        Block = 0;
-        Vitality = 50;
+        if (zombie.name != "Master Zombie")
+        {
+            Level = 1;
 
-        MaxHealth = Vitality;
-        Health = MaxHealth;
+            Power = 15;
+            Magic = 0;
+            Defense = 5;
+            MagicResist = 0;
+            Block = 0;
+            Vitality = 50;
 
-        MaxAttackNumber = 2;
+            MaxHealth = Vitality;
+            Health = MaxHealth;
 
-        KnockbackPowerHeight = 2f;
-        KnockbackPowerLength = 4.5f;
+            MaxAttackNumber = 2;
+
+            KnockbackPowerHeight = 2f;
+            KnockbackPowerLength = 4.5f;
+        }
+        else
+        {
+            Level = 1;
+
+            Power = 30;
+            Magic = 0;
+            Defense = 5;
+            MagicResist = 0;
+            Block = 0;
+            Vitality = 100;
+
+            MaxHealth = Vitality;
+            Health = MaxHealth;
+
+            MaxAttackNumber = 1;
+
+            KnockbackPowerHeight = 0.5f;
+            KnockbackPowerLength = 2.0f;
+        }
 
         #endregion
 
@@ -194,7 +219,7 @@ public class Zombie : Entity
 
     private void OnTriggerStay(Collider other)
     {
-        if (IsActive  && !IsDead && !Player.IsDead)
+        if (IsActive && !IsDead && !Player.IsDead)
         {
             if (other.gameObject.tag == "Ground" && !Rigid.isKinematic)
             {
