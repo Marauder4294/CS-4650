@@ -918,14 +918,104 @@ Prefab:
       propertyPath: m_RootOrder
       value: 4
       objectReference: {fileID: 0}
-    - target: {fileID: 114222258828780694, guid: bc90ebc627aa70e48be3485d3c598ed5,
+    - target: {fileID: 96787662853256032, guid: bc90ebc627aa70e48be3485d3c598ed5,
         type: 2}
-      propertyPath: lightning
+      propertyPath: m_Parameters.colorGradient.key0.r
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 96787662853256032, guid: bc90ebc627aa70e48be3485d3c598ed5,
+        type: 2}
+      propertyPath: m_Parameters.colorGradient.key0.g
+      value: 0.3529412
+      objectReference: {fileID: 0}
+    - target: {fileID: 96787662853256032, guid: bc90ebc627aa70e48be3485d3c598ed5,
+        type: 2}
+      propertyPath: m_Parameters.colorGradient.key0.b
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 96787662853256032, guid: bc90ebc627aa70e48be3485d3c598ed5,
+        type: 2}
+      propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 1922248428874114, guid: e0ae27d29a9a4684f9b096cba8d92fed,
+      objectReference: {fileID: 2100000, guid: b9be4c9e508ffc24683256a078985521, type: 2}
+    - target: {fileID: 96787662853256032, guid: bc90ebc627aa70e48be3485d3c598ed5,
         type: 2}
-    - target: {fileID: 4894299809945532, guid: bc90ebc627aa70e48be3485d3c598ed5, type: 2}
-      propertyPath: m_LocalEulerAnglesHint.y
+      propertyPath: m_Time
+      value: 0.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 96787662853256032, guid: bc90ebc627aa70e48be3485d3c598ed5,
+        type: 2}
+      propertyPath: m_Parameters.colorGradient.m_Mode
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 96787662853256032, guid: bc90ebc627aa70e48be3485d3c598ed5,
+        type: 2}
+      propertyPath: m_Parameters.colorGradient.ctime0
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 96787662853256032, guid: bc90ebc627aa70e48be3485d3c598ed5,
+        type: 2}
+      propertyPath: m_Parameters.colorGradient.key1.g
+      value: 0.3529412
+      objectReference: {fileID: 0}
+    - target: {fileID: 96787662853256032, guid: bc90ebc627aa70e48be3485d3c598ed5,
+        type: 2}
+      propertyPath: m_Parameters.colorGradient.key1.b
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 96787662853256032, guid: bc90ebc627aa70e48be3485d3c598ed5,
+        type: 2}
+      propertyPath: m_Parameters.colorGradient.ctime1
+      value: 65535
+      objectReference: {fileID: 0}
+    - target: {fileID: 96787662853256032, guid: bc90ebc627aa70e48be3485d3c598ed5,
+        type: 2}
+      propertyPath: m_Parameters.colorGradient.key1.r
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 96787662853256032, guid: bc90ebc627aa70e48be3485d3c598ed5,
+        type: 2}
+      propertyPath: m_Parameters.colorGradient.atime1
+      value: 65535
+      objectReference: {fileID: 0}
+    - target: {fileID: 96787662853256032, guid: bc90ebc627aa70e48be3485d3c598ed5,
+        type: 2}
+      propertyPath: m_Parameters.colorGradient.key0.a
+      value: 0.19607843
+      objectReference: {fileID: 0}
+    - target: {fileID: 96787662853256032, guid: bc90ebc627aa70e48be3485d3c598ed5,
+        type: 2}
+      propertyPath: m_Parameters.textureMode
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 96787662853256032, guid: bc90ebc627aa70e48be3485d3c598ed5,
+        type: 2}
+      propertyPath: m_Parameters.colorGradient.key1.a
+      value: 0.78431374
+      objectReference: {fileID: 0}
+    - target: {fileID: 96787662853256032, guid: bc90ebc627aa70e48be3485d3c598ed5,
+        type: 2}
+      propertyPath: m_Parameters.colorGradient.key2.r
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 96787662853256032, guid: bc90ebc627aa70e48be3485d3c598ed5,
+        type: 2}
+      propertyPath: m_Parameters.colorGradient.key2.g
+      value: 0.7746948
+      objectReference: {fileID: 0}
+    - target: {fileID: 96787662853256032, guid: bc90ebc627aa70e48be3485d3c598ed5,
+        type: 2}
+      propertyPath: m_Parameters.colorGradient.key2.b
+      value: 0.3160377
+      objectReference: {fileID: 0}
+    - target: {fileID: 96787662853256032, guid: bc90ebc627aa70e48be3485d3c598ed5,
+        type: 2}
+      propertyPath: m_Parameters.colorGradient.ctime2
+      value: 65535
+      objectReference: {fileID: 0}
+    - target: {fileID: 96787662853256032, guid: bc90ebc627aa70e48be3485d3c598ed5,
+        type: 2}
+      propertyPath: m_Parameters.generateLightingData
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []

@@ -14,6 +14,7 @@ public class Hero : Entity {
     float cameraRotationOffSetY;
 
     public GameObject lightning;
+    TrailRenderer swordTrail;
 
     float attackTimerSeconds;
 
@@ -30,13 +31,16 @@ public class Hero : Entity {
     RectTransform uiImageManaBlueCurrent;
 
     readonly float?[] attackAnimTimes = new float?[7];
+    readonly float?[] windUpAnimTimes = new float?[6];
     float? landingAnimTime;
-    readonly float?[] magicAnimTimes = new float?[2];
+    readonly float?[] magicAnimTimes = new float?[4];
 
     BoxCollider sword;
     BoxCollider shield;
 
     CapsuleCollider sensor;
+
+    float? windUpLockTimer;
 
     #endregion
 
@@ -137,29 +141,21 @@ public class Hero : Entity {
 
         AnimationClip[] clip = Anim.runtimeAnimatorController.animationClips;
 
-        //ChildAnimatorStateMachine[] stateMachines = (Anim.runtimeAnimatorController as AnimatorController).layers[0].stateMachine.stateMachines;
-        //AnimatorStateMachine attackStateMachine =  stateMachines.First(a => a.stateMachine.name == "Attack").stateMachine;
-        //AnimatorStateMachine jumpStateMachine = stateMachines.First(a => a.stateMachine.name == "Jump").stateMachine;
+        windUpLockTimer = -1;
 
-        //attackAnimTimes[1] = ((clip.First(a => a.name == "Attack_1-WindUp").length / attackStateMachine.states.First(a => a.state.name == "Attack_1-WindUp").state.speed)
-        //    + clip.First(a => a.name == "Attack_1").length / attackStateMachine.states.First(a => a.state.name == "Attack_1").state.speed) / AttackSpeed;
-        //attackAnimTimes[2] = (clip.First(a => a.name == "Attack_2").length / attackStateMachine.states.First(a => a.state.name == "Attack_2").state.speed) / AttackSpeed;
-        //attackAnimTimes[3] = ((clip.First(a => a.name == "Attack_3-WindUp").length / attackStateMachine.states.First(a => a.state.name == "Attack_3-WindUp").state.speed)
-        //    + clip.First(a => a.name == "Attack_3").length / attackStateMachine.states.First(a => a.state.name == "Attack_3").state.speed) / AttackSpeed;
-        //attackAnimTimes[4] = attackAnimTimes[3];
-        //attackAnimTimes[5] = ((clip.First(a => a.name == "Attack_4-WindUp").length / attackStateMachine.states.First(a => a.state.name == "Attack_4-WindUp").state.speed)
-        //    + clip.First(a => a.name == "Attack_4").length / attackStateMachine.states.First(a => a.state.name == "Attack_4").state.speed) / AttackSpeed;
-        //attackAnimTimes[6] = (clip.First(a => a.name == "Jump_Attack").length / jumpStateMachine.states.First(a => a.state.name == "Jump_Attack").state.speed) / AttackSpeed;
-        //attackAnimTimes[0] = attackAnimTimes[1] + attackAnimTimes[2] + attackAnimTimes[3] + attackAnimTimes[4] + attackAnimTimes[5];
+        windUpAnimTimes[1] = (clip.First(a => a.name == "Attack_1-WindUp").length / 3) / AttackSpeed;
+        windUpAnimTimes[2] = 0;
+        windUpAnimTimes[3] = (clip.First(a => a.name == "Attack_3-WindUp").length / 3) / AttackSpeed;
+        windUpAnimTimes[4] = windUpAnimTimes[3];
+        windUpAnimTimes[5] = (clip.First(a => a.name == "Attack_4-WindUp").length / 3) / AttackSpeed;
+        windUpAnimTimes[0] = windUpAnimTimes[1] + windUpAnimTimes[2] + windUpAnimTimes[3] + windUpAnimTimes[4] + windUpAnimTimes[5];
 
-        attackAnimTimes[1] = ((clip.First(a => a.name == "Attack_1-WindUp").length / 3)
-            + clip.First(a => a.name == "Attack_1").length / 1) / AttackSpeed;
+        attackAnimTimes[1] = (windUpAnimTimes[1] + clip.First(a => a.name == "Attack_1").length / 1) / AttackSpeed;
         attackAnimTimes[2] = (clip.First(a => a.name == "Attack_2").length / 1) / AttackSpeed;
-        attackAnimTimes[3] = ((clip.First(a => a.name == "Attack_3-WindUp").length / 3)
-            + clip.First(a => a.name == "Attack_3").length / 1) / AttackSpeed;
+        attackAnimTimes[3] = (windUpAnimTimes[3] + clip.First(a => a.name == "Attack_3").length / 1) / AttackSpeed;
         attackAnimTimes[4] = attackAnimTimes[3];
-        attackAnimTimes[5] = ((clip.First(a => a.name == "Attack_4-WindUp").length / 3)
-            + clip.First(a => a.name == "Attack_4").length / 1) / AttackSpeed;
+        attackAnimTimes[5] = (windUpAnimTimes[5] + clip.First(a => a.name == "Attack_4").length / 1) / AttackSpeed;
+
         attackAnimTimes[6] = (clip.First(a => a.name == "Jump_Attack").length / 1) / AttackSpeed;
         attackAnimTimes[0] = attackAnimTimes[1] + attackAnimTimes[2] + attackAnimTimes[3] + attackAnimTimes[4] + attackAnimTimes[5];
 
@@ -175,10 +171,15 @@ public class Hero : Entity {
 
         cameraRotationOffSetY = 28;//Camera.main.transform.eulerAngles.y - 180;
 
-        sword = Player.transform.Find("Dack/root/pelvis/spine01/spine02/spine03/clavicle_R/upperarm_R/lowerarm_R/hand_R").GetComponent<BoxCollider>();
+        sword = Player.transform.Find("Dack/root/pelvis/spine01/spine02/spine03/clavicle_R/upperarm_R/lowerarm_R/hand_R/Sword").GetComponent<BoxCollider>();
         shield = Player.transform.Find("Dack/root/pelvis/spine01/spine02/spine03/clavicle_L/upperarm_L/lowerarm_L/hand_L").GetComponent<BoxCollider>();
         
         sensor = Player.GetComponent<CapsuleCollider>();
+
+        swordTrail = sword.transform.Find("SwordTrail").gameObject.GetComponent<TrailRenderer>();
+        swordTrail.startWidth = 0.3f;
+        swordTrail.endWidth = 0.0001f;
+        swordTrail.enabled = false;
 
         sword.enabled = false;
 
@@ -348,6 +349,7 @@ public class Hero : Entity {
             {
                 AttackCount++;
                 AttackLockTimer = attackAnimTimes[AttackCount] ?? 0;
+                windUpLockTimer = windUpAnimTimes[AttackCount] ?? 0;
                 AttackTimer = (AttackCount == 1) ? AttackLockTimer : attackTimerSeconds / AttackSpeed;
                 MoveTimer = AttackLockTimer;
                 JumpTimer = AttackLockTimer;
@@ -358,6 +360,8 @@ public class Hero : Entity {
                 AttackCount = 5;
                 AttackLockTimer = 0.25f;
                 sword.enabled = true;
+                swordTrail.enabled = true;
+                swordTrail.Clear();
                 AttackLockTimer = attackAnimTimes[6] ?? 0;
             }
 
@@ -422,6 +426,7 @@ public class Hero : Entity {
             if (sword.enabled)
             {
                 sword.enabled = false;
+                swordTrail.enabled = false;
             }
         }
         else
@@ -485,12 +490,29 @@ public class Hero : Entity {
     {
         if (AttackLockTimer > 0)
         {
+            if (swordTrail.enabled)
+            {
+                //swordTrail.AddPosition(swordTrail.gameObject.transform.position);
+            }
+            else if (windUpLockTimer > 0)
+            {
+                windUpLockTimer -= Time.deltaTime;
+            }
+            else if (windUpLockTimer > -1)
+            {
+                windUpLockTimer = -1;
+                swordTrail.enabled = true;
+                //swordTrail.Clear();
+            }
+
             AttackLockTimer -= Time.deltaTime;
         }
         else if (AttackLockTimer > -1)
         {
             if (AttackCount == 1 && NextAttack)
             {
+                // TODO check if nextattack is being reset more than once
+                
                 NextAttack = false;
                 AttackCount++;
                 Anim.SetInteger("AttackNumber", AttackCount);
@@ -500,6 +522,7 @@ public class Hero : Entity {
             else
             {
                 sword.enabled = false;
+                swordTrail.enabled = false;
                 IsAttacking = false;
                 Anim.SetBool("Attacking", IsAttacking);
                 AttackLockTimer = -1;
