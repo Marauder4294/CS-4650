@@ -4,6 +4,10 @@ using UnityEngine;
 
 public class Entity : MonoBehaviour {
 
+    // TODO change other.Power and other.Magic to damage in Damage/MagicDamage Methods
+    // TODO Check which of the trigger methods can be templated in Entity
+    // TODO Set it so entities revert to Idle animation immidiately when hit
+
     #region Public Fields
 
     public Entity Ent { get; set; }
@@ -107,8 +111,6 @@ public class Entity : MonoBehaviour {
 
     public void Damage(Entity other, bool isMagic)
     {
-        // TODO change other.Power and other.Magic to damage
-
         if (other.AttackCount >= other.MaxAttackNumber)
         {
             KnockBack(other);
@@ -148,9 +150,42 @@ public class Entity : MonoBehaviour {
         }
     }
 
+    protected void SetInitialValues()
+    {
+        JumpPower = 3f;
+        JumpHeight = JumpPower;
+
+        AttackCount = 0;
+        MoveTimer = -1;
+        AttackTimer = -1;
+        AttackLockTimer = -1;
+        StunTimer = -1;
+        JumpTimer = -1;
+        DeathTimer = -1;
+        FallBackTimer = -1;
+        KnockDownTimer = -1;
+
+        SetMoving(false);
+        SetAvoiding(false);
+        SetAttacking(false);
+        SetBlocking(false);
+        SetJumping(false);
+        SetKnockedDown(false);
+        SetDead(false);
+
+        IsFallingBack = false;
+        NextAttack = false;
+        IsTouchingBoundary = false;
+
+        Anim.SetBool("Landing", false);
+        Anim.SetFloat("AttackSpeed", AttackSpeed);
+        Anim.SetFloat("MoveSpeed", MovementSpeed);
+        Anim.SetInteger("AttackNumber", AttackCount);
+    }
+
     protected void Stun()
     {
-        Anim.SetBool("Attacking", false);
+        SetAttacking(false);
         StunTimer = 2;
     }
 
@@ -162,26 +197,18 @@ public class Entity : MonoBehaviour {
         }
 
         DeathTimer = 5;
-        IsDead = true;
-        Anim.SetBool("Dead", IsDead);
+        SetDead(true);
     }
 
     public void KnockBack(Entity other)
     {
-        IsKnockedDown = true;
+        SetKnockedDown(true);
+        SetAttacking(false);
+        SetMoving(false);
         IsFallingBack = true;
-        IsAttacking = false;
-        IsMoving = false;
         IsGoingUp = true;
-        Anim.SetBool("KnockedDown", IsKnockedDown);
-        Anim.SetBool("Attacking", IsAttacking);
-        Anim.SetBool("Moving", IsMoving);
 
-        if (IsBlocking)
-        {
-            IsBlocking = false;
-            Anim.SetBool("Blocking", IsBlocking);
-        }
+        if (IsBlocking) SetBlocking(false);
 
         movement = new Vector3(0.15f, 0.15f, 0.15f);
 
@@ -198,6 +225,48 @@ public class Entity : MonoBehaviour {
         transform.position += new Vector3(-transform.forward.x * movement.x, movement.y, -transform.forward.z * movement.z);
 
         KnockDownTimer = 5;
+    }
+
+    protected void SetMoving(bool IsAction)
+    {
+        IsMoving = IsAction;
+        Anim.SetBool("Moving", IsAction);
+    }
+
+    protected void SetAttacking(bool IsAction)
+    {
+        IsAttacking = IsAction;
+        Anim.SetBool("Attacking", IsAction);
+    }
+
+    protected void SetKnockedDown(bool IsAction)
+    {
+        IsKnockedDown = IsAction;
+        Anim.SetBool("KnockedDown", IsAction);
+    }
+
+    protected void SetJumping(bool IsAction)
+    {
+        IsJumping = IsAction;
+        Anim.SetBool("Jumping", IsAction);
+    }
+
+    protected void SetBlocking(bool IsAction)
+    {
+        IsBlocking = IsAction;
+        Anim.SetBool("Blocking", IsAction);
+    }
+
+    protected void SetAvoiding(bool IsAction)
+    {
+        IsAvoiding = IsAction;
+        Anim.SetBool("Avoiding", IsAction);
+    }
+
+    protected void SetDead(bool IsAction)
+    {
+        IsDead = IsAction;
+        Anim.SetBool("Dead", IsAction);
     }
 
     protected virtual void TakeHealth()
@@ -246,8 +315,7 @@ public class Entity : MonoBehaviour {
         else if (AttackLockTimer > -1)
         {
             AttackLockTimer = -1;
-            IsAttacking = false;
-            Anim.SetBool("Attacking", IsAttacking);
+            SetAttacking(false);
         }
     }
 
@@ -272,10 +340,9 @@ public class Entity : MonoBehaviour {
         else if (KnockDownTimer > -1)
         {
             KnockDownTimer = -1;
-            IsKnockedDown = false;
-            Anim.SetBool("KnockedDown", IsKnockedDown);
+            SetKnockedDown(false);
             MoveTimer = 1;
-            IsMoving = true;
+            SetMoving(true);
         }
     }
 

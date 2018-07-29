@@ -4,9 +4,11 @@ using System;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
-//using UnityEditor.Animations;
 
 public class Hero : Entity {
+
+    // TODO Create method to set level and attributes for HERO ONLY
+    // TODO Setup Magic Animations
 
     #region Hero-Specific Variable Declarations
 
@@ -43,18 +45,32 @@ public class Hero : Entity {
 
     float? windUpLockTimer;
 
-    #endregion
+    bool isMagicOne;
+    bool isMagicTwo;
+    bool isMagicThree;
+
+    #endregion Hero-Specific Variable Declarations
 
     void Awake()
     {
-        #region Set Unity objects
+        #region Common Variable Setup
 
         Player = FindObjectOfType<Hero>();
+        Anim = Player.GetComponent<Animator>();
         Ent = Player.GetComponent<Entity>();
         Rigid = Player.GetComponent<Rigidbody>();
-        Anim = Player.GetComponent<Animator>();
 
-        #endregion
+        PositionY = Player.transform.position.y;
+
+        IsActive = true;
+        MaxAttackNumber = 5;
+        KnockbackPowerHeight = 2f;
+        KnockbackPowerLength = 4.5f;
+
+        MovementSpeed = 0.1f;
+        AttackSpeed = 1.6f;
+
+        SetInitialValues();
 
         #region Base Attribute Setter
 
@@ -77,42 +93,9 @@ public class Hero : Entity {
         MagicTwoCost = 15;
         MagicThreeCost = 50;
 
-        #endregion
-
-        #region Set Booleans and floats
-
-        PositionY = Player.transform.position.y;
-
-        JumpPower = 3f;
-        JumpHeight = JumpPower;
-
-        MovementSpeed = 0.1f;
-        AttackSpeed = 1.6f;
-
-        AttackCount = 0;
-        MaxAttackNumber = 5;
-
-        MoveTimer = -1;
-        AttackTimer = -1;
-        AttackLockTimer = -1;
-        StunTimer = -1;
-        JumpTimer = -1;
-        DeathTimer = -1;
-
-        IsDead = false;
-        IsAttacking = false;
-        NextAttack = false;
-        IsActive = true;
-        IsTouchingBoundary = false;
-
-        KnockbackPowerHeight = 2f;
-        KnockbackPowerLength = 4.5f;
-
-        Anim.SetFloat("AttackSpeed", AttackSpeed);
-
-        #endregion
-
-        #region Subscribe to events
+        #endregion Base Attribute Setter
+        
+        #region Subscribe to Events
 
         EventManager.OnAttack += OnAttack;
         EventManager.OnJump += OnJump;
@@ -121,9 +104,11 @@ public class Hero : Entity {
         EventManager.OnMove += OnMove;
         //EventManager.OnAvoid += OnAvoid;
 
-        #endregion
+        #endregion Subscribe to Events
 
-        #region Set Hero-Specific variables
+        #endregion Common Variable Setup
+
+        #region Set Hero-Specific Variables
 
         attackTimerSeconds = 3;
         Image[] images = FindObjectsOfType<Image>();
@@ -184,7 +169,11 @@ public class Hero : Entity {
 
         sword.enabled = false;
 
-        #endregion
+        SetMagicOne(false);
+        SetMagicTwo(false);
+        SetMagicThree(false);
+
+        #endregion Set Hero-Specific Variables
     }
 
     private void OnDestroy()
@@ -196,7 +185,14 @@ public class Hero : Entity {
     {
         if (!IsDead)
         {
-            IsMoving = ((moveX != 0 || moveY != 0) && MoveTimer == -1 && !IsKnockedDown) ? true : false;
+            if ((moveX != 0 || moveY != 0) && MoveTimer == -1 && !IsKnockedDown)
+            {
+                SetMoving(true);
+            }
+            else
+            {
+                SetMoving(false);
+            }
 
             if (IsMoving)
             {
@@ -225,11 +221,9 @@ public class Hero : Entity {
             else if ((moveX != 0 || moveY != 0) && IsKnockedDown && !IsFallingBack)
             {
                 KnockDownTimer = -1;
-                IsKnockedDown = false;
-                Anim.SetBool("KnockedDown", IsKnockedDown);
+                SetKnockedDown(false);
             }
 
-            Anim.SetBool("Moving", IsMoving);
             Anim.SetFloat("MoveSpeed", (MovementSpeed * 14) * ((Mathf.Abs(moveX) + Mathf.Abs(moveY))) / 2);
 
             DecrementAttackLockTimer();
@@ -267,16 +261,11 @@ public class Hero : Entity {
 
                 if (InAir || IsJumping)
                 {
-                    IsJumping = false;
                     InAir = false;
-                    Anim.SetBool("Jumping", IsJumping);
+                    SetJumping(false);
                 }
 
-                if (IsAttacking)
-                {
-                    IsAttacking = false;
-                    Anim.SetBool("Attacking", IsAttacking);
-                }
+                if (IsAttacking) SetAttacking(false);
 
                 Rigid.isKinematic = true;
                 JumpTimer = landingAnimTime ?? 0;
@@ -312,11 +301,7 @@ public class Hero : Entity {
             }
             else if (other.gameObject.tag == "Ground" && Rigid.isKinematic)
             {
-                if (!IsKnockedDown)
-                {
-                    IsJumping = true;
-                    Anim.SetBool("Jumping", IsJumping);
-                }
+                if (!IsKnockedDown) SetJumping(true);
 
                 Rigid.isKinematic = false;
                 Anim.SetBool("Landing", false);
@@ -338,9 +323,8 @@ public class Hero : Entity {
             if (other.gameObject.tag == "Ground" && !Rigid.isKinematic)
             {
                 Rigid.isKinematic = true;
-                IsJumping = false;
                 InAir = false;
-                Anim.SetBool("Jumping", IsJumping);
+                SetJumping(false);
                 Anim.SetBool("Landing", true);
             }
             else if (other.gameObject.tag == "Ground" && Mathf.Abs(Player.transform.position.y - PositionY) > 0.1)
@@ -379,8 +363,7 @@ public class Hero : Entity {
                 AttackLockTimer = attackAnimTimes[6] ?? 0;
             }
 
-            IsAttacking = true;
-            Anim.SetBool("Attacking", IsAttacking);
+            SetAttacking(true);
             Anim.SetInteger("AttackNumber", AttackCount);
         }
         else if (AttackCount == 1 && !NextAttack)
@@ -419,23 +402,11 @@ public class Hero : Entity {
                 Anim.SetInteger("AttackNumber", AttackCount);
             }
 
-            if (IsAttacking)
-            {
-                IsAttacking = false;
-                Anim.SetBool("Attacking", IsAttacking);
-            }
+            if (IsAttacking) SetAttacking(false);
 
-            if (IsMoving)
-            {
-                IsMoving = false;
-                Anim.SetBool("Moving", IsMoving);
-            }
+            if (IsMoving) SetMoving(false);
 
-            if (!IsBlocking)
-            {
-                IsBlocking = true;
-                Anim.SetBool("Blocking", IsBlocking);
-            }
+            if (!IsBlocking) SetBlocking(true);
 
             if (sword.enabled)
             {
@@ -445,11 +416,7 @@ public class Hero : Entity {
         }
         else
         {
-            if (IsBlocking)
-            {
-                IsBlocking = false;
-                Anim.SetBool("Blocking", IsBlocking);
-            }
+            if (IsBlocking) SetBlocking(false);
         }
     }
 
@@ -471,20 +438,26 @@ public class Hero : Entity {
 
     //public void OnAvoid(float avoidX, float avoidY)
     //{
-    //    IsMoving = ((avoidX != 0 || avoidY != 0) && MoveTimer == 0) ? true : false;
-
-    //    if (IsMoving == true)
+    //    if ((avoidX != 0 || avoidY != 0) && MoveTimer == -1 && !IsKnockedDown)
     //    {
-    //        if (IsBlocking == false)
+    //        SetAvoiding(true);
+    //    }
+    //    else
+    //    {
+    //        SetAvoiding(false);
+    //    }
+
+    //    if (IsAvoiding)
+    //    {
+    //        if (!IsBlocking)
     //            Player.transform.LookAt(Player.transform.position += new Vector3(-avoidY * 3, 0, -avoidX * 3));
 
     //        Player.transform.forward += new Vector3(-avoidY, 0, -avoidX);
 
-    //        if (IsBlocking == false)
-    //            Camera.main.transform.position = new Vector3(Player.transform.position.x + cameraOffsetX, Camera.main.transform.position.y, Player.transform.position.z + cameraOffsetZ);
+    //        if (!IsBlocking)
+    //            Camera.main.transform.position = new Vector3(Player.transform.position.x + cameraOffset.x, Camera.main.transform.position.y, Player.transform.position.z + cameraOffset.z);
     //    }
 
-    //    Anim.SetBool("Avoiding", IsAvoiding);
     //    //Anim.SetFloat("AvoidSpeed", (MovementSpeed * 14f) * ((Mathf.Abs(avoidX) + Mathf.Abs(avoidY))) / 2);
     //}
 
@@ -496,6 +469,24 @@ public class Hero : Entity {
         EventManager.OnLightning -= OnLightning;
         EventManager.OnMove -= OnMove;
         //EventManager.OnAvoid -= OnAvoid;
+    }
+
+    void SetMagicOne(bool isAction)
+    {
+        isMagicOne = isAction;
+        Anim.SetBool("MagicOne", isAction);
+    }
+
+    void SetMagicTwo(bool isAction)
+    {
+        isMagicTwo = isAction;
+        Anim.SetBool("MagicTwo", isAction);
+    }
+
+    void SetMagicThree(bool isAction)
+    {
+        isMagicThree = isAction;
+        Anim.SetBool("MagicThree", isAction);
     }
 
     #region Entity Method Overrides
@@ -525,20 +516,18 @@ public class Hero : Entity {
         {
             if (AttackCount == 1 && NextAttack)
             {
-                // TODO check if nextattack is being reset more than once
-                
                 NextAttack = false;
                 AttackCount++;
                 Anim.SetInteger("AttackNumber", AttackCount);
                 AttackLockTimer = attackAnimTimes[AttackCount] ?? 0;
+                MoveTimer = AttackLockTimer;
                 AttackTimer = attackTimerSeconds / AttackSpeed;
             }
             else
             {
                 sword.enabled = false;
                 swordTrail.emitting = false;
-                IsAttacking = false;
-                Anim.SetBool("Attacking", IsAttacking);
+                SetAttacking(false);
                 AttackLockTimer = -1;
             }
         }

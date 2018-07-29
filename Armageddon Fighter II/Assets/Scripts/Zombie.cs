@@ -14,34 +14,24 @@ public class Zombie : Entity
 
     void Awake ()
     {
-        EventManager.OnMove += Hunt;
-
-        MovementSpeed = 0.05f;
-        AttackSpeed = 1;
+        #region Common Variable Setup
 
         Player = FindObjectOfType<Hero>();
-        Rigid = zombie.GetComponent<Rigidbody>();
         Anim = zombie.GetComponent<Animator>();
         Ent = zombie.GetComponent<Entity>();
+        Rigid = zombie.GetComponent<Rigidbody>();
 
         PositionY = zombie.transform.position.y;
 
         IsActive = false;
-        IsMoving = false;
-        IsAttacking = false;
-        IsKnockedDown = false;
-        IsFallingBack = false;
-        NextAttack = false;
-        IsDead = false;
+        MaxAttackNumber = 2;
+        KnockbackPowerHeight = 2f;
+        KnockbackPowerLength = 4.5f;
 
-        AttackCount = 0;
+        MovementSpeed = 0.05f;
+        AttackSpeed = 1;
 
-        MoveTimer = -1;
-        AttackTimer = -1;
-        StunTimer = -1;
-        FallBackTimer = -1;
-        DeathTimer = -1;
-        KnockDownTimer = -1;
+        SetInitialValues();
 
         #region Base Attribute Setter
 
@@ -57,12 +47,17 @@ public class Zombie : Entity
         MaxHealth = Vitality;
         Health = MaxHealth;
 
-        MaxAttackNumber = 2;
-
-        KnockbackPowerHeight = 2f;
-        KnockbackPowerLength = 4.5f;
-
         #endregion Base Attribute Setter
+
+        #region Subscribe to Events
+
+        EventManager.OnMove += Hunt;
+
+        #endregion Subscribe to Events
+
+        #endregion Common Variable Setup
+
+        #region Set Zombie-Specific Variables
 
         leftHand = zombie.transform.Find("Zombie/root/pelvis/spine01/spine02/spine03/clavicle_L/upperarm_L/lowerarm_L/hand_L").GetComponent<BoxCollider>();
         rightHand = zombie.transform.Find("Zombie/root/pelvis/spine01/spine02/spine03/clavicle_R/upperarm_R/lowerarm_R/hand_R").GetComponent<BoxCollider>();
@@ -73,6 +68,8 @@ public class Zombie : Entity
         AnimationClip[] clip = Anim.runtimeAnimatorController.animationClips;
 
         attackAnimTimes[0] = clip.First(a => a.name == "Attack").length / AttackSpeed;
+
+        #endregion Set Zombie-Specific Variables
     }
 
     private void OnDestroy()
@@ -86,11 +83,7 @@ public class Zombie : Entity
         {
             if (IsActive && !IsAttacking && MoveTimer == -1 && !IsKnockedDown)
             {
-                if (!IsMoving)
-                {
-                    IsMoving = true;
-                    Anim.SetBool("Moving", IsMoving);
-                }
+                if (!IsMoving) SetMoving(true);
 
                 zombie.transform.LookAt(new Vector3(Player.transform.position.x, PositionY, Player.transform.position.z));
                 zombie.transform.position += zombie.transform.forward * MovementSpeed;
@@ -101,14 +94,12 @@ public class Zombie : Entity
             //    {
             //        zombie.transform.LookAt(new Vector3(Player.transform.position.x, PositionY, Player.transform.position.z));
             //        Anim.SetBool("Attacking", (StunTimer == 0) ? true : false);
-            //        MoveTimer = (MoveTimer > 0) ?  - Time.deltaTime : 3;
+            //        MoveTimer = (MoveTimer > 0) ? -Time.deltaTime : 3;
             //    }
             //    else
             //    {
-            //        IsAttacking = false;
-            //        IsMoving = true;
-            //        Anim.SetBool("Attacking", false);
-            //        Anim.SetBool("Moving", false);
+            //        SetAttacking(false);
+            //        SetMoving(false);
             //    }
             //}
 
@@ -136,22 +127,16 @@ public class Zombie : Entity
                 zombie.GetComponent<SphereCollider>().enabled = false;
                 zombie.transform.LookAt(new Vector3(Player.transform.position.x, PositionY, Player.transform.position.z));
                 IsActive = true;
-                IsMoving = true;
-                Anim.SetBool("Moving", IsMoving);
+                SetMoving(true);
             }
             else if (other.gameObject.tag == "Boundary" && IsActive)
             {
                 zombie.GetComponent<SphereCollider>().enabled = true;
                 IsActive = false;
 
-                IsMoving = false;
-                Anim.SetBool("Moving", IsMoving);
+                SetMoving(false);
 
-                if (IsAttacking)
-                {
-                    IsAttacking = false;
-                    Anim.SetBool("Attacking", IsAttacking);
-                }
+                if (IsAttacking) SetAttacking(false);
             }
             else if (other.gameObject.tag == "Player" && !IsKnockedDown && AttackLockTimer == -1)
             {
@@ -162,11 +147,17 @@ public class Zombie : Entity
 
                 AttackTimer = AttackLockTimer + 2;
 
-                IsMoving = false;
-                IsAttacking = (StunTimer == -1) ? true : false;
+                if (StunTimer == -1)
+                {
+                    if (!IsAttacking) SetAttacking(true);
+                }
+                else
+                {
+                    if (IsAttacking) SetAttacking(false);
+                }
+
                 zombie.transform.LookAt(new Vector3(Player.transform.position.x, PositionY, Player.transform.position.z));
-                Anim.SetBool("Moving", false);
-                Anim.SetBool("Attacking", IsAttacking);
+                SetMoving(false);
                 MoveTimer = 1;
 
                 AttackCount = (AttackCount < MaxAttackNumber) ? ++AttackCount : 0;
@@ -208,11 +199,18 @@ public class Zombie : Entity
 
                 AttackTimer = AttackLockTimer + 1;
 
-                IsMoving = false;
-                IsAttacking = (StunTimer == -1) ? true : false;
+                SetMoving(false);
+
+                if (StunTimer == -1)
+                {
+                    if (!IsAttacking) SetAttacking(true);
+                }
+                else
+                {
+                    if (IsAttacking) SetAttacking(false);
+                }
+
                 zombie.transform.LookAt(new Vector3(Player.transform.position.x, PositionY, Player.transform.position.z));
-                Anim.SetBool("Moving", false);
-                Anim.SetBool("Attacking", IsAttacking);
                 MoveTimer = 3;
 
                 AttackCount = (AttackCount < 2) ? ++AttackCount : 0;
@@ -230,11 +228,7 @@ public class Zombie : Entity
             }
             else if (other.gameObject.tag == "Player" && !IsKnockedDown)
             {
-                if (IsAttacking)
-                {
-                    IsAttacking = false;
-                    Anim.SetBool("Attacking", IsAttacking);
-                }
+                if (IsAttacking) SetAttacking(false);
             }
         }
         else
