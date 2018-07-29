@@ -45,50 +45,24 @@ public class Zombie : Entity
 
         #region Base Attribute Setter
 
-        // For beta only
+        Level = 1;
 
-        if (zombie.name != "Master Zombie")
-        {
-            Level = 1;
+        Power = 15;
+        Magic = 0;
+        Defense = 5;
+        MagicResist = 0;
+        Block = 0;
+        Vitality = 50;
 
-            Power = 15;
-            Magic = 0;
-            Defense = 5;
-            MagicResist = 0;
-            Block = 0;
-            Vitality = 50;
+        MaxHealth = Vitality;
+        Health = MaxHealth;
 
-            MaxHealth = Vitality;
-            Health = MaxHealth;
+        MaxAttackNumber = 2;
 
-            MaxAttackNumber = 2;
+        KnockbackPowerHeight = 2f;
+        KnockbackPowerLength = 4.5f;
 
-            KnockbackPowerHeight = 2f;
-            KnockbackPowerLength = 4.5f;
-        }
-        else
-        {
-            Level = 1;
-
-            Power = 30;
-            Magic = 0;
-            Defense = 5;
-            MagicResist = 0;
-            Block = 0;
-            Vitality = 100;
-
-            MaxHealth = Vitality;
-            Health = MaxHealth;
-
-            MaxAttackNumber = 1;
-
-            KnockbackPowerHeight = 0.5f;
-            KnockbackPowerLength = 2.0f;
-        }
-
-        #endregion
-
-
+        #endregion Base Attribute Setter
 
         leftHand = zombie.transform.Find("Zombie/root/pelvis/spine01/spine02/spine03/clavicle_L/upperarm_L/lowerarm_L/hand_L").GetComponent<BoxCollider>();
         rightHand = zombie.transform.Find("Zombie/root/pelvis/spine01/spine02/spine03/clavicle_R/upperarm_R/lowerarm_R/hand_R").GetComponent<BoxCollider>();
@@ -225,14 +199,14 @@ public class Zombie : Entity
             {
                 Rigid.isKinematic = true;
             }
-            else if (other.gameObject.tag == "Player" && !IsKnockedDown && AttackLockTimer == -1)
+            else if (other.gameObject.tag == "Player" && !IsKnockedDown && AttackTimer == -1)
             {
                 leftHand.enabled = true;
                 rightHand.enabled = true;
 
                 AttackLockTimer = attackAnimTimes[0] ?? -1;
 
-                AttackTimer = AttackLockTimer + 2;
+                AttackTimer = AttackLockTimer + 1;
 
                 IsMoving = false;
                 IsAttacking = (StunTimer == -1) ? true : false;

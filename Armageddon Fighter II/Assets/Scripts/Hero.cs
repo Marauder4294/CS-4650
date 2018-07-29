@@ -17,6 +17,7 @@ public class Hero : Entity {
     TrailRenderer swordTrail;
 
     float attackTimerSeconds;
+    float stickSpeed;
 
     Vector2 uiMaxHealthWhiteSize;
     Vector2 uiMaxHealthRedSize;
@@ -169,7 +170,7 @@ public class Hero : Entity {
             Camera.main.transform.position.y - Player.transform.position.y, 
             Camera.main.transform.position.z - Player.transform.position.z);
 
-        cameraRotationOffSetY = 28;//Camera.main.transform.eulerAngles.y - 180;
+        cameraRotationOffSetY = 29;//Camera.main.transform.eulerAngles.y - 180;
 
         sword = Player.transform.Find("Dack/root/pelvis/spine01/spine02/spine03/clavicle_R/upperarm_R/lowerarm_R/hand_R/Sword").GetComponent<BoxCollider>();
         shield = Player.transform.Find("Dack/root/pelvis/spine01/spine02/spine03/clavicle_L/upperarm_L/lowerarm_L/hand_L").GetComponent<BoxCollider>();
@@ -179,7 +180,7 @@ public class Hero : Entity {
         swordTrail = sword.transform.Find("SwordTrail").gameObject.GetComponent<TrailRenderer>();
         swordTrail.startWidth = 0.3f;
         swordTrail.endWidth = 0.0001f;
-        swordTrail.enabled = false;
+        swordTrail.emitting = false;
 
         sword.enabled = false;
 
@@ -204,7 +205,21 @@ public class Hero : Entity {
 
                 if (!IsTouchingBoundary && !IsBlocking)
                 {
-                    Player.transform.position += new Vector3((Player.transform.forward.x * MovementSpeed), 0, (Player.transform.forward.z * MovementSpeed));
+                    if (moveX != 0 && moveY != 0)
+                    {
+                        stickSpeed = (Mathf.Abs(moveX) + Mathf.Abs(moveY)) / 2;
+                    }
+                    else if (moveX != 0)
+                    {
+                        stickSpeed = Mathf.Abs(moveX);
+                    }
+                    else if (moveY != 0)
+                    {
+                        stickSpeed = Mathf.Abs(moveY);
+                    }
+
+                    //Player.transform.position += new Vector3((Player.transform.forward.x * MovementSpeed), 0, (Player.transform.forward.z * MovementSpeed));
+                    Player.transform.position += new Vector3(((Player.transform.forward.x * MovementSpeed) * stickSpeed), 0, ((Player.transform.forward.z * MovementSpeed) * stickSpeed));
                 }
             }
             else if ((moveX != 0 || moveY != 0) && IsKnockedDown && !IsFallingBack)
@@ -215,7 +230,7 @@ public class Hero : Entity {
             }
 
             Anim.SetBool("Moving", IsMoving);
-            Anim.SetFloat("MoveSpeed", (MovementSpeed * 14f) * ((System.Math.Abs(moveX) + System.Math.Abs(moveY))) / 2);
+            Anim.SetFloat("MoveSpeed", (MovementSpeed * 14) * ((Mathf.Abs(moveX) + Mathf.Abs(moveY))) / 2);
 
             DecrementAttackLockTimer();
             DecrementAttackTimer();
@@ -345,7 +360,7 @@ public class Hero : Entity {
                 AttackCount = 0;
             }
 
-            if (InAir == false)
+            if (!InAir)
             {
                 AttackCount++;
                 AttackLockTimer = attackAnimTimes[AttackCount] ?? 0;
@@ -358,10 +373,9 @@ public class Hero : Entity {
             else
             {
                 AttackCount = 5;
-                AttackLockTimer = 0.25f;
                 sword.enabled = true;
-                swordTrail.enabled = true;
-                swordTrail.Clear();
+                swordTrail.emitting = true;
+                //swordTrail.Clear();
                 AttackLockTimer = attackAnimTimes[6] ?? 0;
             }
 
@@ -426,7 +440,7 @@ public class Hero : Entity {
             if (sword.enabled)
             {
                 sword.enabled = false;
-                swordTrail.enabled = false;
+                swordTrail.emitting = false;
             }
         }
         else
@@ -471,7 +485,7 @@ public class Hero : Entity {
     //    }
 
     //    Anim.SetBool("Avoiding", IsAvoiding);
-    //    //Anim.SetFloat("AvoidSpeed", (MovementSpeed * 14f) * ((System.Math.Abs(avoidX) + System.Math.Abs(avoidY))) / 2);
+    //    //Anim.SetFloat("AvoidSpeed", (MovementSpeed * 14f) * ((Mathf.Abs(avoidX) + Mathf.Abs(avoidY))) / 2);
     //}
 
     void UnsubscribeEvents()
@@ -490,7 +504,7 @@ public class Hero : Entity {
     {
         if (AttackLockTimer > 0)
         {
-            if (swordTrail.enabled)
+            if (swordTrail.emitting)
             {
                 //swordTrail.AddPosition(swordTrail.gameObject.transform.position);
             }
@@ -501,7 +515,7 @@ public class Hero : Entity {
             else if (windUpLockTimer > -1)
             {
                 windUpLockTimer = -1;
-                swordTrail.enabled = true;
+                swordTrail.emitting = true;
                 //swordTrail.Clear();
             }
 
@@ -522,7 +536,7 @@ public class Hero : Entity {
             else
             {
                 sword.enabled = false;
-                swordTrail.enabled = false;
+                swordTrail.emitting = false;
                 IsAttacking = false;
                 Anim.SetBool("Attacking", IsAttacking);
                 AttackLockTimer = -1;
