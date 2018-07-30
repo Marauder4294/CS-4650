@@ -16,7 +16,6 @@ public class Hero : Entity {
     float cameraRotationOffSetY;
 
     public GameObject lightning;
-    TrailRenderer swordTrail;
 
     float attackTimerSeconds;
     float stickSpeed;
@@ -33,21 +32,16 @@ public class Hero : Entity {
     RectTransform uiImageManaWhiteCurrent;
     RectTransform uiImageManaBlueCurrent;
 
-    readonly float?[] attackAnimTimes = new float?[7];
-    readonly float?[] windUpAnimTimes = new float?[6];
     float? landingAnimTime;
     readonly float?[] magicAnimTimes = new float?[4];
 
-    BoxCollider sword;
-    BoxCollider shield;
-
     CapsuleCollider sensor;
-
-    float? windUpLockTimer;
 
     bool isMagicOne;
     bool isMagicTwo;
     bool isMagicThree;
+
+    float? magicLockTimer;
 
     #endregion Hero-Specific Variable Declarations
 
@@ -71,6 +65,8 @@ public class Hero : Entity {
         AttackSpeed = 1.6f;
 
         SetInitialValues();
+
+        magicLockTimer = -1;
 
         #region Base Attribute Setter
 
@@ -127,47 +123,47 @@ public class Hero : Entity {
 
         AnimationClip[] clip = Anim.runtimeAnimatorController.animationClips;
 
-        windUpLockTimer = -1;
+        WindUpAnimTimes = new float[6];
+        WindUpAnimTimes[1] = (clip.First(a => a.name == "Attack_1-WindUp").length / 3) / AttackSpeed;
+        WindUpAnimTimes[2] = 0;
+        WindUpAnimTimes[3] = (clip.First(a => a.name == "Attack_3-WindUp").length / 3) / AttackSpeed;
+        WindUpAnimTimes[4] = WindUpAnimTimes[3];
+        WindUpAnimTimes[5] = (clip.First(a => a.name == "Attack_4-WindUp").length / 3) / AttackSpeed;
+        WindUpAnimTimes[0] = WindUpAnimTimes[1] + WindUpAnimTimes[2] + WindUpAnimTimes[3] + WindUpAnimTimes[4] + WindUpAnimTimes[5];
 
-        windUpAnimTimes[1] = (clip.First(a => a.name == "Attack_1-WindUp").length / 3) / AttackSpeed;
-        windUpAnimTimes[2] = 0;
-        windUpAnimTimes[3] = (clip.First(a => a.name == "Attack_3-WindUp").length / 3) / AttackSpeed;
-        windUpAnimTimes[4] = windUpAnimTimes[3];
-        windUpAnimTimes[5] = (clip.First(a => a.name == "Attack_4-WindUp").length / 3) / AttackSpeed;
-        windUpAnimTimes[0] = windUpAnimTimes[1] + windUpAnimTimes[2] + windUpAnimTimes[3] + windUpAnimTimes[4] + windUpAnimTimes[5];
+        AttackAnimTimes = new float[7];
+        AttackAnimTimes[1] = (WindUpAnimTimes[1] + clip.First(a => a.name == "Attack_1").length / 1) / AttackSpeed;
+        AttackAnimTimes[2] = (clip.First(a => a.name == "Attack_2").length / 1) / AttackSpeed;
+        AttackAnimTimes[3] = (WindUpAnimTimes[3] + clip.First(a => a.name == "Attack_3").length / 1) / AttackSpeed;
+        AttackAnimTimes[4] = AttackAnimTimes[3];
+        AttackAnimTimes[5] = (WindUpAnimTimes[5] + clip.First(a => a.name == "Attack_4").length / 1) / AttackSpeed;
 
-        attackAnimTimes[1] = (windUpAnimTimes[1] + clip.First(a => a.name == "Attack_1").length / 1) / AttackSpeed;
-        attackAnimTimes[2] = (clip.First(a => a.name == "Attack_2").length / 1) / AttackSpeed;
-        attackAnimTimes[3] = (windUpAnimTimes[3] + clip.First(a => a.name == "Attack_3").length / 1) / AttackSpeed;
-        attackAnimTimes[4] = attackAnimTimes[3];
-        attackAnimTimes[5] = (windUpAnimTimes[5] + clip.First(a => a.name == "Attack_4").length / 1) / AttackSpeed;
-
-        attackAnimTimes[6] = (clip.First(a => a.name == "Jump_Attack").length / 1) / AttackSpeed;
-        attackAnimTimes[0] = attackAnimTimes[1] + attackAnimTimes[2] + attackAnimTimes[3] + attackAnimTimes[4] + attackAnimTimes[5];
+        AttackAnimTimes[6] = (clip.First(a => a.name == "Jump_Attack").length / 1) / AttackSpeed;
+        AttackAnimTimes[0] = AttackAnimTimes[1] + AttackAnimTimes[2] + AttackAnimTimes[3] + AttackAnimTimes[4] + AttackAnimTimes[5];
 
         landingAnimTime = clip.First(a => a.name == "Jump_Landing").length / 5;
 
-        //magicAnimTimes[1] = (clip.First(a => a.name == "Magic_One").length / 
-        //    (Anim.runtimeAnimatorController as AnimatorController).layers[0].stateMachine.states.First(a => a.state.name == "Magic_One").state.speed) / AttackSpeed;
-        //magicAnimTimes[0] = magicAnimTimes[1];
+        magicAnimTimes[1] = (clip.First(a => a.name == "Magic_One").length / 2) / AttackSpeed;
+        magicAnimTimes[0] = magicAnimTimes[1];
 
         cameraOffset = new Vector3(Camera.main.transform.position.x - Player.transform.position.x, 
             Camera.main.transform.position.y - Player.transform.position.y, 
             Camera.main.transform.position.z - Player.transform.position.z);
 
         cameraRotationOffSetY = 29;//Camera.main.transform.eulerAngles.y - 180;
-
-        sword = Player.transform.Find("Dack/root/pelvis/spine01/spine02/spine03/clavicle_R/upperarm_R/lowerarm_R/hand_R/Sword").GetComponent<BoxCollider>();
-        shield = Player.transform.Find("Dack/root/pelvis/spine01/spine02/spine03/clavicle_L/upperarm_L/lowerarm_L/hand_L").GetComponent<BoxCollider>();
         
+
+        Weapon = new BoxCollider[1];
+        Weapon[0] = Player.transform.Find("Dack/root/pelvis/spine01/spine02/spine03/clavicle_R/upperarm_R/lowerarm_R/hand_R/Sword").GetComponent<BoxCollider>();
+        Shield = Player.transform.Find("Dack/root/pelvis/spine01/spine02/spine03/clavicle_L/upperarm_L/lowerarm_L/hand_L").GetComponent<BoxCollider>();
+        Shield.enabled = false;
+        WeaponTrail = new TrailRenderer[1];
+        WeaponTrail[0] = Weapon[0].transform.Find("SwordTrail").gameObject.GetComponent<TrailRenderer>();
+        WeaponTrail[0].startWidth = 0.3f;
+        WeaponTrail[0].endWidth = 0.0001f;
+        SetWeapon(false);
+
         sensor = Player.GetComponent<CapsuleCollider>();
-
-        swordTrail = sword.transform.Find("SwordTrail").gameObject.GetComponent<TrailRenderer>();
-        swordTrail.startWidth = 0.3f;
-        swordTrail.endWidth = 0.0001f;
-        swordTrail.emitting = false;
-
-        sword.enabled = false;
 
         SetMagicOne(false);
         SetMagicTwo(false);
@@ -214,7 +210,6 @@ public class Hero : Entity {
                         stickSpeed = Mathf.Abs(moveY);
                     }
 
-                    //Player.transform.position += new Vector3((Player.transform.forward.x * MovementSpeed), 0, (Player.transform.forward.z * MovementSpeed));
                     Player.transform.position += new Vector3(((Player.transform.forward.x * MovementSpeed) * stickSpeed), 0, ((Player.transform.forward.z * MovementSpeed) * stickSpeed));
                 }
             }
@@ -227,7 +222,9 @@ public class Hero : Entity {
             Anim.SetFloat("MoveSpeed", (MovementSpeed * 14) * ((Mathf.Abs(moveX) + Mathf.Abs(moveY))) / 2);
 
             DecrementAttackLockTimer();
+            DecrementWindUpLockTimer();
             DecrementAttackTimer();
+            DecrementMagicTimer();
             DecrementJumpTimer();
             DecrementMoveTimer();
             DecrementStunTimer();
@@ -335,9 +332,9 @@ public class Hero : Entity {
         }
     }
 
-    public void OnAttack(bool isAction)
+    public void OnAttack()
     {
-        if (AttackLockTimer == -1)
+        if (AttackLockTimer == -1 && !IsKnockedDown)
         {
             if (AttackCount >= 5)
             {
@@ -347,20 +344,19 @@ public class Hero : Entity {
             if (!InAir)
             {
                 AttackCount++;
-                AttackLockTimer = attackAnimTimes[AttackCount] ?? 0;
-                windUpLockTimer = windUpAnimTimes[AttackCount] ?? 0;
+                AttackLockTimer = AttackAnimTimes[AttackCount];
+                WindUpLockTimer = WindUpAnimTimes[AttackCount];
                 AttackTimer = (AttackCount == 1) ? AttackLockTimer : attackTimerSeconds / AttackSpeed;
                 MoveTimer = AttackLockTimer;
                 JumpTimer = AttackLockTimer;
-                sword.enabled = true;
+                
+                if (WindUpLockTimer <= 0) SetWeapon(true);
             }
             else
             {
-                AttackCount = 5;
-                sword.enabled = true;
-                swordTrail.emitting = true;
-                //swordTrail.Clear();
-                AttackLockTimer = attackAnimTimes[6] ?? 0;
+                AttackCount = 6;
+                SetWeapon(true);
+                AttackLockTimer = AttackAnimTimes[AttackCount];
             }
 
             SetAttacking(true);
@@ -372,12 +368,12 @@ public class Hero : Entity {
         }
     }
 
-    public void OnJump(bool isAction)
+    public void OnJump()
     {
-        if (isAction == true && InAir == false && JumpTimer == -1 && !IsKnockedDown)
+        if (!InAir && JumpTimer == -1 && !IsKnockedDown)
         {
             InAir = true;
-            Anim.SetBool("Jumping", isAction);
+            Anim.SetBool("Jumping", true);
             Anim.SetBool("Landing", false);
             Anim.SetBool("Attacking", false);
             Rigid.isKinematic = false;
@@ -408,10 +404,9 @@ public class Hero : Entity {
 
             if (!IsBlocking) SetBlocking(true);
 
-            if (sword.enabled)
+            if (Weapon[0].enabled)
             {
-                sword.enabled = false;
-                swordTrail.emitting = false;
+                SetWeapon(false);
             }
         }
         else
@@ -420,19 +415,12 @@ public class Hero : Entity {
         }
     }
 
-    public void OnLightning(bool isAction)
+    public void OnLightning()
     {
-        if (Mana >= MagicOneCost)
+        if (magicLockTimer == -1 && Mana >= MagicOneCost)
         {
-            GameObject projectile = Instantiate(lightning);
-            projectile.transform.position = Player.transform.Find("Dack/root/pelvis/spine01/spine02/spine03/clavicle_L/upperarm_L/lowerarm_L/hand_L").transform.position;
-
-            projectile.transform.forward = Player.transform.forward;
-
-            projectile.GetComponent<Magic>().Ent = Ent;
-            projectile.GetComponent<Magic>().Type = "Lightning";
-
-            TakeMana(MagicOneCost);
+            magicLockTimer = magicAnimTimes[1];
+            SetMagicOne(true);
         }
     }
 
@@ -489,27 +477,51 @@ public class Hero : Entity {
         Anim.SetBool("MagicThree", isAction);
     }
 
+    void DecrementMagicTimer()
+    {
+        if (magicLockTimer > 0)
+        {
+            magicLockTimer -= Time.deltaTime;
+        }
+        else if (magicLockTimer > -1)
+        {
+            magicLockTimer = -1;
+
+            if (isMagicOne)
+            {
+                SetMagicOne(false);
+
+                GameObject projectile = Instantiate(lightning);
+                projectile.transform.position = Player.transform.Find("Dack/root/pelvis/spine01/spine02/spine03/clavicle_L/upperarm_L/lowerarm_L/hand_L").transform.position;
+
+                Transform rods = projectile.transform.Find("Rods").transform;
+
+                rods.eulerAngles = new Vector3(rods.eulerAngles.x, rods.eulerAngles.y + 34.7f, rods.eulerAngles.z);
+
+                projectile.transform.forward = Player.transform.forward;
+
+                projectile.GetComponent<Magic>().Ent = Ent;
+                projectile.GetComponent<Magic>().Type = "Lightning";
+
+                TakeMana(MagicOneCost);
+            }
+            else if (isMagicTwo)
+            {
+                SetMagicTwo(false);
+            }
+            else if (isMagicThree)
+            {
+                SetMagicThree(false);
+            }
+        }
+    }
+
     #region Entity Method Overrides
 
     protected override void DecrementAttackLockTimer()
     {
         if (AttackLockTimer > 0)
         {
-            if (swordTrail.emitting)
-            {
-                //swordTrail.AddPosition(swordTrail.gameObject.transform.position);
-            }
-            else if (windUpLockTimer > 0)
-            {
-                windUpLockTimer -= Time.deltaTime;
-            }
-            else if (windUpLockTimer > -1)
-            {
-                windUpLockTimer = -1;
-                swordTrail.emitting = true;
-                //swordTrail.Clear();
-            }
-
             AttackLockTimer -= Time.deltaTime;
         }
         else if (AttackLockTimer > -1)
@@ -519,16 +531,15 @@ public class Hero : Entity {
                 NextAttack = false;
                 AttackCount++;
                 Anim.SetInteger("AttackNumber", AttackCount);
-                AttackLockTimer = attackAnimTimes[AttackCount] ?? 0;
+                AttackLockTimer = AttackAnimTimes[AttackCount];
                 MoveTimer = AttackLockTimer;
                 AttackTimer = attackTimerSeconds / AttackSpeed;
             }
             else
             {
-                sword.enabled = false;
-                swordTrail.emitting = false;
-                SetAttacking(false);
                 AttackLockTimer = -1;
+                SetWeapon(false);
+                SetAttacking(false);
             }
         }
     }

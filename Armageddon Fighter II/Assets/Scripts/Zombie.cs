@@ -7,11 +7,6 @@ public class Zombie : Entity
 {
     public GameObject zombie;
 
-    BoxCollider leftHand;
-    BoxCollider rightHand;
-
-    readonly float?[] attackAnimTimes = new float?[1];
-
     void Awake ()
     {
         #region Common Variable Setup
@@ -59,15 +54,25 @@ public class Zombie : Entity
 
         #region Set Zombie-Specific Variables
 
-        leftHand = zombie.transform.Find("Zombie/root/pelvis/spine01/spine02/spine03/clavicle_L/upperarm_L/lowerarm_L/hand_L").GetComponent<BoxCollider>();
-        rightHand = zombie.transform.Find("Zombie/root/pelvis/spine01/spine02/spine03/clavicle_R/upperarm_R/lowerarm_R/hand_R").GetComponent<BoxCollider>();
+        Weapon = new BoxCollider[2];
+        Weapon[0] = zombie.transform.Find("Zombie/root/pelvis/spine01/spine02/spine03/clavicle_L/upperarm_L/lowerarm_L/hand_L").GetComponent<BoxCollider>();
+        Weapon[1] = zombie.transform.Find("Zombie/root/pelvis/spine01/spine02/spine03/clavicle_R/upperarm_R/lowerarm_R/hand_R").GetComponent<BoxCollider>();
+        WeaponTrail = new TrailRenderer[2];
+        WeaponTrail[0] = zombie.transform.Find("Zombie/root/pelvis/spine01/spine02/spine03/clavicle_R/upperarm_R/lowerarm_R/hand_R/WeaponTrail").GetComponent<TrailRenderer>();
+        WeaponTrail[0].startWidth = 0.3f;
+        WeaponTrail[0].endWidth = 0.0001f;
+        WeaponTrail[1] = zombie.transform.Find("Zombie/root/pelvis/spine01/spine02/spine03/clavicle_L/upperarm_L/lowerarm_L/hand_L/WeaponTrail").GetComponent<TrailRenderer>();
+        WeaponTrail[1].startWidth = 0.3f;
+        WeaponTrail[1].endWidth = 0.0001f;
 
-        leftHand.enabled = false;
-        rightHand.enabled = false;
+        SetWeapon(false);
 
         AnimationClip[] clip = Anim.runtimeAnimatorController.animationClips;
 
-        attackAnimTimes[0] = clip.First(a => a.name == "Attack").length / AttackSpeed;
+        AttackAnimTimes = new float[1];
+        AttackAnimTimes[0] = clip.First(a => a.name == "Attack").length / AttackSpeed;
+        WindUpAnimTimes = new float[1];
+        WindUpAnimTimes[0] = AttackAnimTimes[0] / 2;
 
         #endregion Set Zombie-Specific Variables
     }
@@ -81,7 +86,7 @@ public class Zombie : Entity
     {
         if (IsActive && !IsDead && !Player.IsDead)
         {
-            if (IsActive && !IsAttacking && MoveTimer == -1 && !IsKnockedDown)
+            if (IsActive && !IsAttacking && MoveTimer == -1 && !IsKnockedDown && StunTimer == -1)
             {
                 if (!IsMoving) SetMoving(true);
 
@@ -104,6 +109,7 @@ public class Zombie : Entity
             //}
 
             DecrementAttackLockTimer();
+            DecrementWindUpLockTimer();
             DecrementAttackTimer();
             DecrementJumpTimer();
             DecrementMoveTimer();
@@ -138,27 +144,17 @@ public class Zombie : Entity
 
                 if (IsAttacking) SetAttacking(false);
             }
-            else if (other.gameObject.tag == "Player" && !IsKnockedDown && AttackLockTimer == -1)
+            else if (other.gameObject.tag == "Player" && !IsKnockedDown && AttackLockTimer == -1 && StunTimer == -1)
             {
-                leftHand.enabled = true;
-                rightHand.enabled = true;
-
-                AttackLockTimer = attackAnimTimes[0] ?? -1;
+                AttackLockTimer = AttackAnimTimes[0];
+                WindUpLockTimer = WindUpAnimTimes[0];
 
                 AttackTimer = AttackLockTimer + 2;
-
-                if (StunTimer == -1)
-                {
-                    if (!IsAttacking) SetAttacking(true);
-                }
-                else
-                {
-                    if (IsAttacking) SetAttacking(false);
-                }
+                MoveTimer = AttackTimer;
 
                 zombie.transform.LookAt(new Vector3(Player.transform.position.x, PositionY, Player.transform.position.z));
                 SetMoving(false);
-                MoveTimer = 1;
+                SetAttacking(true);
 
                 AttackCount = (AttackCount < MaxAttackNumber) ? ++AttackCount : 0;
             }
@@ -190,12 +186,10 @@ public class Zombie : Entity
             {
                 Rigid.isKinematic = true;
             }
-            else if (other.gameObject.tag == "Player" && !IsKnockedDown && AttackTimer == -1)
+            else if (other.gameObject.tag == "Player" && !IsKnockedDown && AttackTimer == -1 && StunTimer == -1)
             {
-                leftHand.enabled = true;
-                rightHand.enabled = true;
-
-                AttackLockTimer = attackAnimTimes[0] ?? -1;
+                WindUpLockTimer = WindUpAnimTimes[0];
+                AttackLockTimer = AttackAnimTimes[0];
 
                 AttackTimer = AttackLockTimer + 1;
 
@@ -250,8 +244,7 @@ public class Zombie : Entity
         }
         else if (AttackTimer > -1)
         {
-            leftHand.enabled = false;
-            rightHand.enabled = false;
+            SetWeapon(false);
             AttackTimer = -1;
             AttackLockTimer = -1;
             AttackCount = 0;

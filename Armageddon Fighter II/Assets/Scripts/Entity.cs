@@ -23,9 +23,15 @@ public class Entity : MonoBehaviour {
     protected bool IsGateKeeper { get; set; }
     protected Animator Anim { get; set; }
     protected Rigidbody Rigid { get; set; }
-    protected int Level { get; set; }
+    protected float[] AttackAnimTimes { get; set; }
+    protected float[] WindUpAnimTimes { get; set; }
+    protected BoxCollider[] Weapon { get; set; }
+    protected BoxCollider Shield { get; set; }
+    protected TrailRenderer[] WeaponTrail { get; set; }
 
     #region Attributes
+
+    protected int Level { get; set; }
 
     protected int Power { get; set; }
     protected int Magic { get; set; }
@@ -33,6 +39,13 @@ public class Entity : MonoBehaviour {
     protected int Block { get; set; }
     protected int MagicResist { get; set; }
     protected int Vitality { get; set; }
+
+    #region Speed Modifiers
+
+    protected float AttackSpeed { get; set; }
+    protected float MovementSpeed { get; set; }
+
+    #endregion
 
     protected int MaxHealth { get; set; }
     protected int Health { get; set; }
@@ -58,22 +71,16 @@ public class Entity : MonoBehaviour {
 
     #region Combat Fields
 
-    protected int Datage { get; set; }
+    protected int AttackDamage { get; set; }
     protected bool IsAttacking { get; set; }
     protected bool NextAttack { get; set; }
     protected bool IsBlocking { get; set; }
     protected float AttackTimer { get; set; }
     protected float AttackLockTimer { get; set; }
+    protected float WindUpLockTimer { get; set; }
     protected float StunTimer { get; set; }
     public bool IsDead { get; set; }
     protected float DeathTimer { get; set; }
-
-    #endregion
-
-    #region Speed Modifiers
-
-    protected float AttackSpeed { get; set; }
-    protected float MovementSpeed { get; set; }
 
     #endregion
 
@@ -164,6 +171,7 @@ public class Entity : MonoBehaviour {
         DeathTimer = -1;
         FallBackTimer = -1;
         KnockDownTimer = -1;
+        WindUpLockTimer = -1;
 
         SetMoving(false);
         SetAvoiding(false);
@@ -173,6 +181,7 @@ public class Entity : MonoBehaviour {
         SetKnockedDown(false);
         SetDead(false);
 
+        InAir = false;
         IsFallingBack = false;
         NextAttack = false;
         IsTouchingBoundary = false;
@@ -186,6 +195,7 @@ public class Entity : MonoBehaviour {
     protected void Stun()
     {
         SetAttacking(false);
+        SetMoving(false);
         StunTimer = 2;
     }
 
@@ -255,6 +265,8 @@ public class Entity : MonoBehaviour {
     {
         IsBlocking = IsAction;
         Anim.SetBool("Blocking", IsAction);
+
+        if (Shield != null) Shield.enabled = IsAction;
     }
 
     protected void SetAvoiding(bool IsAction)
@@ -267,6 +279,19 @@ public class Entity : MonoBehaviour {
     {
         IsDead = IsAction;
         Anim.SetBool("Dead", IsAction);
+    }
+
+    protected void SetWeapon(bool isAction)
+    {
+        foreach (BoxCollider weapon in Weapon)
+        {
+            weapon.enabled = isAction;
+        }
+
+        foreach (TrailRenderer weaponTrail in WeaponTrail)
+        {
+            weaponTrail.emitting = isAction;
+        }
     }
 
     protected virtual void TakeHealth()
@@ -302,6 +327,7 @@ public class Entity : MonoBehaviour {
             AttackTimer = -1;
             AttackLockTimer = -1;
             AttackCount = 0;
+            SetWeapon(false);
             Anim.SetInteger("AttackNumber", AttackCount);
         }
     }
@@ -316,6 +342,20 @@ public class Entity : MonoBehaviour {
         {
             AttackLockTimer = -1;
             SetAttacking(false);
+            SetWeapon(false);
+        }
+    }
+
+    protected virtual void DecrementWindUpLockTimer()
+    {
+        if (WindUpLockTimer > 0)
+        {
+            WindUpLockTimer -= Time.deltaTime;
+        }
+        else if (WindUpLockTimer > -1)
+        {
+            WindUpLockTimer = -1;
+            SetWeapon(true);
         }
     }
 

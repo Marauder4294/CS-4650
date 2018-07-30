@@ -11,7 +11,7 @@ public class Lightning : Magic {
         magic = GetComponent<Magic>();
     }
 
-    void FixedUpdate ()
+    void Update ()
     {
         lightning.transform.position += lightning.transform.forward;
 	}
