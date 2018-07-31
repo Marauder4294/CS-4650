@@ -94,20 +94,6 @@ public class Zombie : Entity
                 zombie.transform.LookAt(new Vector3(Player.transform.position.x, PositionY, Player.transform.position.z));
                 zombie.transform.position += zombie.transform.forward * MovementSpeed;
             }
-            //else if (IsAttacking && AttackTimer == -1)
-            //{
-            //    if (Mathf.Abs(Player.transform.position.x - zombie.transform.position.x) <= 2f && Mathf.Abs(Player.transform.position.z - zombie.transform.position.z) <= 2f)
-            //    {
-            //        zombie.transform.LookAt(new Vector3(Player.transform.position.x, PositionY, Player.transform.position.z));
-            //        Anim.SetBool("Attacking", (StunTimer == 0) ? true : false);
-            //        MoveTimer = (MoveTimer > 0) ? -Time.deltaTime : 3;
-            //    }
-            //    else
-            //    {
-            //        SetAttacking(false);
-            //        SetMoving(false);
-            //    }
-            //}
 
             DecrementAttackLockTimer();
             DecrementWindUpLockTimer();

@@ -25,5 +25,9 @@ public class Body : MonoBehaviour {
                 entity.MagicDamage(magic.Ent, magic.Type);
             }
         }
+        else if (other.gameObject.tag == "Ground" && entity.IsDead)
+        {
+            gameObject.GetComponent<CapsuleCollider>().enabled = false;
+        }
     }
 }

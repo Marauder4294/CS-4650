@@ -5,6 +5,8 @@ using UnityEngine;
 
 public class InputManager
 {
+    //TODO Add Left and Right Trigger Buttons for XBOX
+
     #region ControllerType & Button Declarations
 
     public enum ControllerType { Keyboard, PS4, XBOX };
@@ -75,12 +77,12 @@ public class InputManager
 
         #region Axes
 
-        new ControlInput("Left Stick X", ControllerType.PS4, InputType.AxisX, KeyCode.None),
-        new ControlInput("Left Stick Y", ControllerType.PS4, InputType.AxisYInverted, KeyCode.None),
+        new ControlInput("Left Stick X", ControllerType.PS4, InputType.AxisXInverted, KeyCode.None),
+        new ControlInput("Left Stick Y", ControllerType.PS4, InputType.AxisY, KeyCode.None),
         new ControlInput("Right Stick X", ControllerType.PS4, InputType.Axis3, KeyCode.None),
-        new ControlInput("Right Stick Y", ControllerType.PS4, InputType.Axis4Inverted, KeyCode.None),
+        new ControlInput("Right Stick Y", ControllerType.PS4, InputType.Axis4, KeyCode.None),
         new ControlInput("D-Pad X", ControllerType.PS4, InputType.Axis7, KeyCode.None),
-        new ControlInput("D-Pad Y", ControllerType.PS4, InputType.Axis8Inverted, KeyCode.None)
+        new ControlInput("D-Pad Y", ControllerType.PS4, InputType.Axis8, KeyCode.None)
 
         #endregion
     };
@@ -265,6 +267,8 @@ public class InputManager
         playInputs[(int)InputKey.Jump] = new PlayInput(InputKey.Jump, PS4controlInputs.First(a => a.inputName == "Square"));
         playInputs[(int)InputKey.Start] = new PlayInput(InputKey.Start, PS4controlInputs.First(a => a.inputName == "Options"));
         playInputs[(int)InputKey.MagicOne] = new PlayInput(InputKey.MagicOne, PS4controlInputs.First(a => a.inputName == "Triangle"));
+        playInputs[(int)InputKey.MagicTwo] = new PlayInput(InputKey.MagicTwo, PS4controlInputs.First(a => a.inputName == "Circle"));
+        playInputs[(int)InputKey.MagicThree] = new PlayInput(InputKey.MagicThree, PS4controlInputs.First(a => a.inputName == "R2"));
         playInputs[(int)InputKey.LeftThumstickX] = new PlayInput(InputKey.LeftThumstickX, PS4controlInputs.First(a => a.inputName == "Left Stick X"));
         playInputs[(int)InputKey.LeftThumstickY] = new PlayInput(InputKey.LeftThumstickY, PS4controlInputs.First(a => a.inputName == "Left Stick Y"));
         playInputs[(int)InputKey.RightThumstickX] = new PlayInput(InputKey.RightThumstickX, PS4controlInputs.First(a => a.inputName == "Right Stick X"));
@@ -318,6 +322,8 @@ public class InputManager
             rawImages.First(a => a.name == "BlockButton").texture = textures.First(a => a.name == "PS4 L2 Button");
             rawImages.First(a => a.name == "JumpButton").texture = textures.First(a => a.name == "PS4 Square Button");
             rawImages.First(a => a.name == "LightningButton").texture = textures.First(a => a.name == "PS4 Triangle Button");
+            rawImages.First(a => a.name == "IceBlastButton").texture = textures.First(a => a.name == "PS4 Circle Button");
+            rawImages.First(a => a.name == "FireBoltButton").texture = textures.First(a => a.name == "PS4 R2 Button");
 
             rawImages.First(a => a.name == "RestartHighlight").texture = textures.First(a => a.name == "PS4 X Button");
             rawImages.First(a => a.name == "ExitHighlight").texture = textures.First(a => a.name == "PS4 X Button");
@@ -325,9 +331,11 @@ public class InputManager
         else if (controllerType == ControllerType.XBOX)
         {
             rawImages.First(a => a.name == "AttackButton").texture = textures.First(a => a.name == "XBOX A Button");
-            rawImages.First(a => a.name == "BlockButton").texture = textures.First(a => a.name == "XBOX Y Button");
+            rawImages.First(a => a.name == "BlockButton").texture = textures.First(a => a.name == "XBOX Left Trigger Button");
             rawImages.First(a => a.name == "JumpButton").texture = textures.First(a => a.name == "XBOX X Button");
             rawImages.First(a => a.name == "LightningButton").texture = textures.First(a => a.name == "XBOX B Button");
+            //rawImages.First(a => a.name == "IceBlastButton").texture = textures.First(a => a.name == "PS4 R2 Button");
+            //rawImages.First(a => a.name == "FireBoltButton").texture = textures.First(a => a.name == "PS4 Triangle Button");
 
             rawImages.First(a => a.name == "RestartHighlight").texture = textures.First(a => a.name == "XBOX A Button");
             rawImages.First(a => a.name == "ExitHighlight").texture = textures.First(a => a.name == "XBOX A Button");
