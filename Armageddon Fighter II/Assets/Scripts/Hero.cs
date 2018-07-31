@@ -8,7 +8,6 @@ using UnityEngine.UI;
 public class Hero : Entity {
 
     // TODO Create method to set level and attributes for HERO ONLY
-    // TODO Setup Magic Animations
 
     #region Hero-Specific Variable Declarations
 
@@ -65,6 +64,8 @@ public class Hero : Entity {
         AttackSpeed = 1.6f;
 
         SetInitialValues();
+
+        StunLength = 0;
 
         magicLockTimer = -1;
 
@@ -181,7 +182,7 @@ public class Hero : Entity {
     {
         if (!IsDead)
         {
-            if ((moveX != 0 || moveY != 0) && MoveTimer == -1 && !IsKnockedDown)
+            if ((moveX != 0 || moveY != 0) && MoveTimer == -1 && magicLockTimer == -1 && !IsKnockedDown)
             {
                 SetMoving(true);
             }
@@ -240,96 +241,6 @@ public class Hero : Entity {
 
         Fallback();
         DecrementKnockDownTimer();
-    }
-
-    private void OnTriggerEnter(Collider other)
-    {
-        if (!IsDead && !IsTouchingBoundary)
-        {
-            if (other.gameObject.tag == "Boundary")
-            {
-                IsTouchingBoundary = true;
-                Rigid.isKinematic = false;
-                //sensor.isTrigger = false;
-            }
-            else if (other.gameObject.tag == "Ground" && !Rigid.isKinematic)
-            {
-                Anim.SetBool("Landing", true);
-
-                if (InAir || IsJumping)
-                {
-                    InAir = false;
-                    SetJumping(false);
-                }
-
-                if (IsAttacking) SetAttacking(false);
-
-                Rigid.isKinematic = true;
-                JumpTimer = landingAnimTime ?? 0;
-                MoveTimer = JumpTimer;
-            }
-            else if (other.gameObject.tag == "DeathBoundary")
-            {
-                Player.transform.Find("Body").GetComponent<SkinnedMeshRenderer>().enabled = false;
-                Player.transform.Find("Hair").GetComponent<SkinnedMeshRenderer>().enabled = false;
-                Player.transform.Find("HalfOne").GetComponent<SkinnedMeshRenderer>().enabled = false;
-                Player.transform.Find("HalfTwo").GetComponent<SkinnedMeshRenderer>().enabled = false;
-                Player.transform.Find("Shield").GetComponent<SkinnedMeshRenderer>().enabled = false;
-                IsKnockedDown = true;
-                Death(Ent);
-            }
-        }
-        else
-        {
-            if (other.gameObject.tag == "Ground" && !Rigid.isKinematic)
-            {
-                Rigid.isKinematic = true;
-            }
-        }
-    }
-
-    private void OnTriggerExit(Collider other)
-    {
-        if (!IsDead)
-        {
-            if (other.gameObject.tag == "Boundary")
-            {
-                IsTouchingBoundary = false;
-            }
-            else if (other.gameObject.tag == "Ground" && Rigid.isKinematic)
-            {
-                if (!IsKnockedDown) SetJumping(true);
-
-                Rigid.isKinematic = false;
-                Anim.SetBool("Landing", false);
-            }
-        }
-        else
-        {
-            if (other.gameObject.tag == "Ground" && Rigid.isKinematic)
-            {
-                Rigid.isKinematic = false;
-            }
-        }
-    }
-
-    private void OnTriggerStay(Collider other)
-    {
-        if (!IsDead && !IsTouchingBoundary)
-        {
-            if (other.gameObject.tag == "Ground" && !Rigid.isKinematic)
-            {
-                Rigid.isKinematic = true;
-                InAir = false;
-                SetJumping(false);
-                Anim.SetBool("Landing", true);
-            }
-            else if (other.gameObject.tag == "Ground" && Mathf.Abs(Player.transform.position.y - PositionY) > 0.1)
-            {
-                PositionY = (PositionY < Player.transform.position.y) ? PositionY + 0.04f : PositionY - 0.04f;
-                Camera.main.transform.position = new Vector3(Player.transform.position.x + cameraOffset.x, PositionY + cameraOffset.y, Player.transform.position.z + cameraOffset.z);
-            }
-        }
     }
 
     public void OnAttack()
@@ -419,6 +330,9 @@ public class Hero : Entity {
     {
         if (magicLockTimer == -1 && Mana >= MagicOneCost)
         {
+            if (IsAttacking) SetAttacking(false);
+            if (IsMoving) SetMoving(false);
+            if (IsBlocking) SetBlocking(false);
             magicLockTimer = magicAnimTimes[1];
             SetMagicOne(true);
         }
@@ -475,6 +389,21 @@ public class Hero : Entity {
     {
         isMagicThree = isAction;
         Anim.SetBool("MagicThree", isAction);
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        TriggerEnter(gameObject, other);
+    }
+
+    private void OnTriggerStay(Collider other)
+    {
+        TriggerStay(gameObject, other);
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        TriggerExit(gameObject, other);
     }
 
     void DecrementMagicTimer()
@@ -559,7 +488,7 @@ public class Hero : Entity {
         float currentMana = (float)Mana / MaxMana;
 
         uiImageManaWhiteCurrent.sizeDelta = new Vector2(uiMaxManaWhiteSize.x * currentMana, uiMaxManaWhiteSize.y);
-        uiImageManaBlueCurrent.sizeDelta = new Vector2(uiMaxManaBlueSize.x * currentMana - ((uiMaxManaBlueSize.x - uiMaxManaBlueSize.x) / 2), uiMaxManaBlueSize.y);
+        uiImageManaBlueCurrent.sizeDelta = new Vector2(uiMaxManaBlueSize.x * currentMana - ((uiMaxManaWhiteSize.x - uiMaxManaBlueSize.x) / 2), uiMaxManaBlueSize.y);
     }
 
     protected override void DecrementDeathTimer()
@@ -603,6 +532,98 @@ public class Hero : Entity {
                 {
                     UnsubscribeEvents();
                 }
+            }
+        }
+    }
+
+    protected override void TriggerEnter(GameObject fighter, Collider other)
+    {
+        if (!IsDead && !IsTouchingBoundary)
+        {
+            if (other.gameObject.tag == "Boundary")
+            {
+                IsTouchingBoundary = true;
+                Rigid.isKinematic = false;
+                //sensor.isTrigger = false;
+            }
+            else if (other.gameObject.tag == "Ground" && !Rigid.isKinematic)
+            {
+                var test = gameObject;
+
+                Anim.SetBool("Landing", true);
+
+                if (InAir || IsJumping)
+                {
+                    InAir = false;
+                    SetJumping(false);
+                }
+
+                if (IsAttacking) SetAttacking(false);
+
+                Rigid.isKinematic = true;
+                JumpTimer = landingAnimTime ?? 0;
+                MoveTimer = JumpTimer;
+            }
+            else if (other.gameObject.tag == "DeathBoundary")
+            {
+                Player.transform.Find("Body").GetComponent<SkinnedMeshRenderer>().enabled = false;
+                Player.transform.Find("Hair").GetComponent<SkinnedMeshRenderer>().enabled = false;
+                Player.transform.Find("HalfOne").GetComponent<SkinnedMeshRenderer>().enabled = false;
+                Player.transform.Find("HalfTwo").GetComponent<SkinnedMeshRenderer>().enabled = false;
+                Player.transform.Find("Shield").GetComponent<SkinnedMeshRenderer>().enabled = false;
+                IsKnockedDown = true;
+                Death(Ent);
+            }
+        }
+        else
+        {
+            if (other.gameObject.tag == "Ground" && !Rigid.isKinematic)
+            {
+                Rigid.isKinematic = true;
+            }
+        }
+    }
+
+    protected override void TriggerStay(GameObject fighter, Collider other)
+    {
+        if (!IsDead && !IsTouchingBoundary)
+        {
+            if (other.gameObject.tag == "Ground" && !Rigid.isKinematic)
+            {
+                Rigid.isKinematic = true;
+                InAir = false;
+                SetJumping(false);
+                Anim.SetBool("Landing", true);
+            }
+            else if (other.gameObject.tag == "Ground" && Mathf.Abs(fighter.transform.position.y - PositionY) > 0.1)
+            {
+                PositionY = (PositionY < fighter.transform.position.y) ? PositionY + 0.04f : PositionY - 0.04f;
+                Camera.main.transform.position = new Vector3(fighter.transform.position.x + cameraOffset.x, PositionY + cameraOffset.y, fighter.transform.position.z + cameraOffset.z);
+            }
+        }
+    }
+
+    protected override void TriggerExit(GameObject fighter, Collider other)
+    {
+        if (!IsDead)
+        {
+            if (other.gameObject.tag == "Boundary")
+            {
+                IsTouchingBoundary = false;
+            }
+            else if (other.gameObject.tag == "Ground" && Rigid.isKinematic)
+            {
+                if (!IsKnockedDown) SetJumping(true);
+
+                Rigid.isKinematic = false;
+                Anim.SetBool("Landing", false);
+            }
+        }
+        else
+        {
+            if (other.gameObject.tag == "Ground" && Rigid.isKinematic)
+            {
+                Rigid.isKinematic = false;
             }
         }
     }

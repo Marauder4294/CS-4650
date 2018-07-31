@@ -107,10 +107,10 @@ MonoBehaviour:
     y: 30
     width: 1920
     height: 947
-  m_MinSize: {x: 713, y: 492}
-  m_MaxSize: {x: 18008, y: 14042}
+  m_MinSize: {x: 711, y: 492}
+  m_MaxSize: {x: 18006, y: 14042}
   vertical: 0
-  controlID: 21852
+  controlID: 4587
 --- !u!114 &6
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -131,10 +131,10 @@ MonoBehaviour:
     y: 0
     width: 629
     height: 947
-  m_MinSize: {x: 202, y: 442}
-  m_MaxSize: {x: 4002, y: 8042}
+  m_MinSize: {x: 202, y: 421}
+  m_MaxSize: {x: 4002, y: 8021}
   vertical: 1
-  controlID: 21878
+  controlID: 4706
 --- !u!114 &7
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -179,8 +179,8 @@ MonoBehaviour:
     y: 457
     width: 629
     height: 490
-  m_MinSize: {x: 202, y: 221}
-  m_MaxSize: {x: 4002, y: 4021}
+  m_MinSize: {x: 200, y: 200}
+  m_MaxSize: {x: 4000, y: 4000}
   m_ActualView: {fileID: 13}
   m_Panes:
   - {fileID: 13}
@@ -210,7 +210,7 @@ MonoBehaviour:
   m_MinSize: {x: 234, y: 492}
   m_MaxSize: {x: 10004, y: 14042}
   vertical: 1
-  controlID: 21853
+  controlID: 4766
 --- !u!114 &10
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -229,8 +229,8 @@ MonoBehaviour:
     y: 0
     width: 658
     height: 339
-  m_MinSize: {x: 202, y: 221}
-  m_MaxSize: {x: 4002, y: 4021}
+  m_MinSize: {x: 204, y: 221}
+  m_MaxSize: {x: 4004, y: 4021}
   m_ActualView: {fileID: 17}
   m_Panes:
   - {fileID: 17}
@@ -279,8 +279,8 @@ MonoBehaviour:
     y: 0
     width: 633
     height: 947
-  m_MinSize: {x: 277, y: 71}
-  m_MaxSize: {x: 4002, y: 4021}
+  m_MinSize: {x: 275, y: 50}
+  m_MaxSize: {x: 4000, y: 4000}
   m_ActualView: {fileID: 19}
   m_Panes:
   - {fileID: 19}
@@ -333,7 +333,7 @@ MonoBehaviour:
     m_VAllowExceedBaseRangeMin: 1
     m_VAllowExceedBaseRangeMax: 1
     m_ScaleWithWindow: 0
-    m_HSlider: 0
+    m_HSlider: 1
     m_VSlider: 0
     m_IgnoreScrollWheelUntilClicked: 0
     m_EnableMouseInput: 1
@@ -347,18 +347,18 @@ MonoBehaviour:
       y: 17
       width: 627
       height: 452
-    m_Scale: {x: 0.3265625, y: 0.3265625}
-    m_Translation: {x: 313.5, y: 226}
+    m_Scale: {x: 0.34615624, y: 0.34615624}
+    m_Translation: {x: 296.91, y: 226.00002}
     m_MarginLeft: 0
     m_MarginRight: 0
     m_MarginTop: 0
     m_MarginBottom: 0
     m_LastShownAreaInsideMargins:
       serializedVersion: 2
-      x: -960
-      y: -692.05743
-      width: 1920
-      height: 1384.1149
+      x: -857.7341
+      y: -652.8844
+      width: 1811.3208
+      height: 1305.7688
     m_MinimalGUI: 1
   m_defaultScale: 0.3265625
   m_TargetTexture: {fileID: 0}
@@ -399,9 +399,9 @@ MonoBehaviour:
   m_isRotationLocked: 0
   m_AudioPlay: 0
   m_Position:
-    m_Target: {x: 0.7097584, y: 0.98026586, z: -10.0964985}
+    m_Target: {x: 1.3711457, y: 0.83061254, z: -55.59886}
     speed: 2
-    m_Value: {x: 0.7097584, y: 0.98026586, z: -10.0964985}
+    m_Value: {x: 1.3711457, y: 0.83061254, z: -55.59886}
   m_RenderMode: 0
   m_CameraMode:
     drawMode: 0
@@ -433,9 +433,9 @@ MonoBehaviour:
     speed: 2
     m_Value: {x: -0.7071068, y: 0, z: -0, w: -0.7071068}
   m_Size:
-    m_Target: 15.889363
+    m_Target: 19.03567
     speed: 2
-    m_Value: 15.889363
+    m_Value: 19.03567
   m_Ortho:
     m_Target: 0
     speed: 2
@@ -524,9 +524,9 @@ MonoBehaviour:
   m_PersistentViewDataDictionary: {fileID: 0}
   m_TreeViewState:
     scrollPos: {x: 0, y: 0}
-    m_SelectedIDs: e0110000
-    m_LastClickedID: 0
-    m_ExpandedIDs: 984ddfff9c62dfffa862dfff74bbdfffcef2dfff8e6de0ff1c9fe0ffa4f9ffffbcf9ffffbef9ffffc8f9ffffccf9ffffdaf9ffffe4f9fffff0f9ffff7efaffff82faffffbcfaffff16fbffff18fbffff1afbffff1cfbffff26fbffff28fbffff2efbffff3cfbffff46fbffffd2fbffffd6fbffffe4fbffffe6fbffff00000000
+    m_SelectedIDs: be0e0000
+    m_LastClickedID: 3774
+    m_ExpandedIDs: c4faffffe6fbffff00000000060e0000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -587,11 +587,11 @@ MonoBehaviour:
     m_ShowAllHits: 0
     m_SearchArea: 1
     m_Folders:
-    - Assets/Characters/Heroes/Dack
+    - Assets/Scripts
   m_ViewMode: 1
   m_StartGridSize: 50
   m_LastFolders:
-  - Assets/Characters/Heroes/Dack
+  - Assets/Scripts
   m_LastFoldersGridSize: 50
   m_LastProjectPath: D:\Colin Hamilton\Documents\GitHub\CS-4650\Armageddon Fighter
     II
@@ -599,9 +599,9 @@ MonoBehaviour:
     m_IsLocked: 0
   m_FolderTreeState:
     scrollPos: {x: 0, y: 0}
-    m_SelectedIDs: c60b0000
-    m_LastClickedID: 3014
-    m_ExpandedIDs: 00000000700900002c0c0000b60c0000920d00008a3300008c3300008e3300009033000092330000943300009633000098330000
+    m_SelectedIDs: 7a0a0000
+    m_LastClickedID: 2682
+    m_ExpandedIDs: 0000000070090000220c0000ac0c00009c3300009e330000a0330000a2330000a4330000a6330000a8330000aa330000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -629,7 +629,7 @@ MonoBehaviour:
     scrollPos: {x: 0, y: 0}
     m_SelectedIDs: 
     m_LastClickedID: 0
-    m_ExpandedIDs: 00000000700900002c0c0000b60c0000920d00008a3300008c3300008e3300009033000092330000943300009633000098330000
+    m_ExpandedIDs: 0000000070090000220c0000ac0c00009c3300009e330000a0330000a2330000a4330000a6330000a8330000aa330000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 

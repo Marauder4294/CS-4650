@@ -25,6 +25,7 @@ public class Zombie : Entity
 
         MovementSpeed = 0.05f;
         AttackSpeed = 1;
+        StunLength = 2;
 
         SetInitialValues();
 
@@ -126,112 +127,17 @@ public class Zombie : Entity
 
     private void OnTriggerEnter(Collider other)
     {
-        if (!IsDead && !Player.IsDead)
-        {
-            if (other.gameObject.tag == "Player" && zombie.GetComponent<SphereCollider>().enabled)
-            {
-                zombie.GetComponent<SphereCollider>().enabled = false;
-                zombie.transform.LookAt(new Vector3(Player.transform.position.x, PositionY, Player.transform.position.z));
-                IsActive = true;
-                SetMoving(true);
-            }
-            else if (other.gameObject.tag == "Boundary" && IsActive)
-            {
-                zombie.GetComponent<SphereCollider>().enabled = true;
-                IsActive = false;
-
-                SetMoving(false);
-
-                if (IsAttacking) SetAttacking(false);
-            }
-            else if (other.gameObject.tag == "Player" && !IsKnockedDown && AttackLockTimer == -1 && StunTimer == -1)
-            {
-                AttackLockTimer = AttackAnimTimes[0];
-                WindUpLockTimer = WindUpAnimTimes[0];
-
-                AttackTimer = AttackLockTimer + 2;
-                MoveTimer = AttackTimer;
-
-                zombie.transform.LookAt(new Vector3(Player.transform.position.x, PositionY, Player.transform.position.z));
-                SetMoving(false);
-                SetAttacking(true);
-
-                AttackCount = (AttackCount < MaxAttackNumber) ? ++AttackCount : 0;
-            }
-            else if (other.gameObject.tag == "Ground")
-            {
-                InAir = false;
-                Rigid.isKinematic = true;
-            }
-            else if (other.gameObject.tag == "DeathBoundary")
-            {
-                Destroy(gameObject);
-            }
-        }
-        else
-        {
-            if (other.gameObject.tag == "Ground")
-            {
-                InAir = false;
-                Rigid.isKinematic = true;
-            }
-        }
+        TriggerEnter(zombie, other);
     }
 
     private void OnTriggerStay(Collider other)
     {
-        if (IsActive && !IsDead && !Player.IsDead)
-        {
-            if (other.gameObject.tag == "Ground" && !Rigid.isKinematic)
-            {
-                Rigid.isKinematic = true;
-            }
-            else if (other.gameObject.tag == "Player" && !IsKnockedDown && AttackTimer == -1 && StunTimer == -1)
-            {
-                WindUpLockTimer = WindUpAnimTimes[0];
-                AttackLockTimer = AttackAnimTimes[0];
-
-                AttackTimer = AttackLockTimer + 1;
-
-                SetMoving(false);
-
-                if (StunTimer == -1)
-                {
-                    if (!IsAttacking) SetAttacking(true);
-                }
-                else
-                {
-                    if (IsAttacking) SetAttacking(false);
-                }
-
-                zombie.transform.LookAt(new Vector3(Player.transform.position.x, PositionY, Player.transform.position.z));
-                MoveTimer = 3;
-
-                AttackCount = (AttackCount < 2) ? ++AttackCount : 0;
-            }
-        }
+        TriggerStay(zombie, other);
     }
 
     private void OnTriggerExit(Collider other)
     {
-        if (!IsDead)
-        {
-            if (other.gameObject.tag == "Ground" && Rigid.isKinematic)
-            {
-                Rigid.isKinematic = false;
-            }
-            else if (other.gameObject.tag == "Player" && !IsKnockedDown)
-            {
-                if (IsAttacking) SetAttacking(false);
-            }
-        }
-        else
-        {
-            if (other.gameObject.tag == "Ground" && Rigid.isKinematic)
-            {
-                Rigid.isKinematic = false;
-            }
-        }
+        TriggerExit(zombie, other);
     }
 
     #region Entity Method Overrides

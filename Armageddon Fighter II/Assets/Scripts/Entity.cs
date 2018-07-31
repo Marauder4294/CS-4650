@@ -5,7 +5,6 @@ using UnityEngine;
 public class Entity : MonoBehaviour {
 
     // TODO change other.Power and other.Magic to damage in Damage/MagicDamage Methods
-    // TODO Check which of the trigger methods can be templated in Entity
     // TODO Set it so entities revert to Idle animation immidiately when hit
 
     #region Public Fields
@@ -79,6 +78,7 @@ public class Entity : MonoBehaviour {
     protected float AttackLockTimer { get; set; }
     protected float WindUpLockTimer { get; set; }
     protected float StunTimer { get; set; }
+    protected float StunLength { get; set; }
     public bool IsDead { get; set; }
     protected float DeathTimer { get; set; }
 
@@ -194,9 +194,10 @@ public class Entity : MonoBehaviour {
 
     protected void Stun()
     {
+        if (Weapon[0].enabled) SetWeapon(false);
         SetAttacking(false);
         SetMoving(false);
-        StunTimer = 2;
+        StunTimer = StunLength;
     }
 
     protected virtual void Death(Entity other)
@@ -302,6 +303,105 @@ public class Entity : MonoBehaviour {
     protected virtual void TakeMana(int cost)
     {
 
+    }
+
+    protected virtual void TriggerEnter(GameObject fighter, Collider other)
+    {
+        if (!IsDead && !Player.IsDead)
+        {
+            if (other.gameObject.tag == "Player" && fighter.GetComponent<SphereCollider>().enabled)
+            {
+                fighter.GetComponent<SphereCollider>().enabled = false;
+                fighter.transform.LookAt(new Vector3(Player.transform.position.x, PositionY, Player.transform.position.z));
+                IsActive = true;
+                SetMoving(true);
+            }
+            else if (other.gameObject.tag == "Boundary" && IsActive)
+            {
+                fighter.GetComponent<SphereCollider>().enabled = true;
+                IsActive = false;
+
+                SetMoving(false);
+
+                if (IsAttacking) SetAttacking(false);
+            }
+            else if (other.gameObject.tag == "Player" && !IsKnockedDown && AttackLockTimer == -1 && StunTimer == -1)
+            {
+                AttackLockTimer = AttackAnimTimes[0];
+                WindUpLockTimer = WindUpAnimTimes[0];
+
+                AttackTimer = AttackLockTimer + 2;
+                MoveTimer = AttackTimer;
+
+                fighter.transform.LookAt(new Vector3(Player.transform.position.x, PositionY, Player.transform.position.z));
+                SetMoving(false);
+                SetAttacking(true);
+
+                AttackCount = (AttackCount < MaxAttackNumber) ? ++AttackCount : 0;
+            }
+            else if (other.gameObject.tag == "Ground")
+            {
+                InAir = false;
+                Rigid.isKinematic = true;
+            }
+            else if (other.gameObject.tag == "DeathBoundary")
+            {
+                Destroy(gameObject);
+            }
+        }
+        else
+        {
+            if (other.gameObject.tag == "Ground")
+            {
+                InAir = false;
+                Rigid.isKinematic = true;
+            }
+        }
+    }
+
+    protected virtual void TriggerStay(GameObject fighter, Collider other)
+    {
+        if (IsActive && !IsDead && !Player.IsDead)
+        {
+            if (other.gameObject.tag == "Ground" && !Rigid.isKinematic)
+            {
+                Rigid.isKinematic = true;
+            }
+            else if (other.gameObject.tag == "Player" && !IsKnockedDown && AttackTimer == -1 && StunTimer == -1)
+            {
+                WindUpLockTimer = WindUpAnimTimes[0];
+                AttackLockTimer = AttackAnimTimes[0];
+
+                AttackTimer = AttackLockTimer + 1;
+
+                SetMoving(false);
+
+                if (!IsAttacking) SetAttacking(true);
+
+                fighter.transform.LookAt(new Vector3(Player.transform.position.x, PositionY, Player.transform.position.z));
+                MoveTimer = 3;
+
+                AttackCount = (AttackCount < 2) ? ++AttackCount : 0;
+            }
+        }
+    }
+
+    protected virtual void TriggerExit(GameObject fighter, Collider other)
+    {
+        if (!IsDead)
+        {
+            if (other.gameObject.tag == "Player" && !IsKnockedDown)
+            {
+                if (IsAttacking) SetAttacking(false);
+            }
+        }
+        else
+        {
+            if (other.gameObject.tag == "Ground" && Rigid.isKinematic)
+            {
+                Rigid.isKinematic = false;
+            }
+        }
     }
 
     protected virtual void DecrementStunTimer()
@@ -424,6 +524,7 @@ public class Entity : MonoBehaviour {
                 {
                     IsGoingUp = false;
                     movement.y = 0;
+                    Rigid.isKinematic = false;
                 }
             }
 
