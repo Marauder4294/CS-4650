@@ -32,7 +32,10 @@ public class Hero : Entity {
     RectTransform uiImageManaBlueCurrent;
 
     float? landingAnimTime;
+    float? avoidAnimTime;
     readonly float?[] magicAnimTimes = new float?[4];
+
+    float? avoidTimer;
 
     CapsuleCollider sensor;
 
@@ -64,6 +67,8 @@ public class Hero : Entity {
         AttackSpeed = 1.6f;
 
         SetInitialValues();
+
+        avoidTimer = -1;
 
         StunLength = 0;
 
@@ -99,7 +104,7 @@ public class Hero : Entity {
         EventManager.OnBlock += OnBlock;
         EventManager.OnLightning += OnLightning;
         EventManager.OnMove += OnMove;
-        //EventManager.OnAvoid += OnAvoid;
+        EventManager.OnAvoid += OnAvoid;
 
         #endregion Subscribe to Events
 
@@ -147,11 +152,13 @@ public class Hero : Entity {
         magicAnimTimes[1] = (clip.First(a => a.name == "Magic_One").length / 2) / AttackSpeed;
         magicAnimTimes[0] = magicAnimTimes[1];
 
+        avoidAnimTime = clip.First(a => a.name == "Aviod_Front").length;
+
         cameraOffset = new Vector3(Camera.main.transform.position.x - Player.transform.position.x, 
             Camera.main.transform.position.y - Player.transform.position.y, 
             Camera.main.transform.position.z - Player.transform.position.z);
 
-        cameraRotationOffSetY = 29;//Camera.main.transform.eulerAngles.y - 180;
+        cameraRotationOffSetY = 29;
         
 
         Weapon = new BoxCollider[1];
@@ -182,7 +189,7 @@ public class Hero : Entity {
     {
         if (!IsDead)
         {
-            if ((moveX != 0 || moveY != 0) && MoveTimer == -1 && magicLockTimer == -1 && !IsKnockedDown)
+            if ((moveX != 0 || moveY != 0) && MoveTimer == -1 && avoidTimer == -1 && magicLockTimer == -1 && !IsKnockedDown)
             {
                 SetMoving(true);
             }
@@ -220,7 +227,9 @@ public class Hero : Entity {
                 SetKnockedDown(false);
             }
 
-            Anim.SetFloat("MoveSpeed", (MovementSpeed * 14) * ((Mathf.Abs(moveX) + Mathf.Abs(moveY))) / 2);
+            if (!IsMoving) stickSpeed = 0;
+
+            Anim.SetFloat("MoveSpeed", (MovementSpeed * 14) * stickSpeed);
 
             DecrementAttackLockTimer();
             DecrementWindUpLockTimer();
@@ -241,6 +250,38 @@ public class Hero : Entity {
 
         Fallback();
         DecrementKnockDownTimer();
+    }
+
+    public void OnAvoid(float avoidX, float avoidY)
+    {
+        if (!IsDead && avoidTimer == -1)
+        {
+            if ((avoidX != 0 || avoidY != 0) && magicLockTimer == -1 && !IsKnockedDown)
+            {
+                SetAvoiding(true);
+            }
+            else
+            {
+                SetAvoiding(false);
+            }
+
+            if (IsAvoiding && !IsTouchingBoundary && !IsBlocking)
+            {
+                if (IsMoving) SetMoving(false);
+
+                Player.transform.LookAt(new Vector3(Player.transform.position.x + avoidX, Player.transform.position.y, Player.transform.position.z + avoidY));
+                Player.transform.eulerAngles = new Vector3(0, Player.transform.eulerAngles.y + cameraRotationOffSetY, 0);
+
+                avoidTimer = avoidAnimTime;
+
+                //Anim.SetFloat("AvoidSpeed", 14);
+            }
+
+            if (!IsBlocking || IsKnockedDown)
+                Camera.main.transform.position = new Vector3(Player.transform.position.x + cameraOffset.x, Camera.main.transform.position.y, Player.transform.position.z + cameraOffset.z);
+        }
+
+        DecrementAvoidTimer();
     }
 
     public void OnAttack()
@@ -338,31 +379,6 @@ public class Hero : Entity {
         }
     }
 
-    //public void OnAvoid(float avoidX, float avoidY)
-    //{
-    //    if ((avoidX != 0 || avoidY != 0) && MoveTimer == -1 && !IsKnockedDown)
-    //    {
-    //        SetAvoiding(true);
-    //    }
-    //    else
-    //    {
-    //        SetAvoiding(false);
-    //    }
-
-    //    if (IsAvoiding)
-    //    {
-    //        if (!IsBlocking)
-    //            Player.transform.LookAt(Player.transform.position += new Vector3(-avoidY * 3, 0, -avoidX * 3));
-
-    //        Player.transform.forward += new Vector3(-avoidY, 0, -avoidX);
-
-    //        if (!IsBlocking)
-    //            Camera.main.transform.position = new Vector3(Player.transform.position.x + cameraOffset.x, Camera.main.transform.position.y, Player.transform.position.z + cameraOffset.z);
-    //    }
-
-    //    //Anim.SetFloat("AvoidSpeed", (MovementSpeed * 14f) * ((Mathf.Abs(avoidX) + Mathf.Abs(avoidY))) / 2);
-    //}
-
     void UnsubscribeEvents()
     {
         EventManager.OnAttack -= OnAttack;
@@ -370,7 +386,7 @@ public class Hero : Entity {
         EventManager.OnBlock -= OnBlock;
         EventManager.OnLightning -= OnLightning;
         EventManager.OnMove -= OnMove;
-        //EventManager.OnAvoid -= OnAvoid;
+        EventManager.OnAvoid -= OnAvoid;
     }
 
     void SetMagicOne(bool isAction)
@@ -442,6 +458,22 @@ public class Hero : Entity {
             {
                 SetMagicThree(false);
             }
+        }
+    }
+
+    void DecrementAvoidTimer()
+    {
+        if (avoidTimer > 0)
+        {
+            avoidTimer -= Time.deltaTime;
+
+            Player.transform.position += Player.transform.forward * (Time.deltaTime * 7);
+        }
+        else if (avoidTimer > -1)
+        {
+            avoidTimer = -1;
+
+            SetAvoiding(false);
         }
     }
 
@@ -548,8 +580,6 @@ public class Hero : Entity {
             }
             else if (other.gameObject.tag == "Ground" && !Rigid.isKinematic)
             {
-                var test = gameObject;
-
                 Anim.SetBool("Landing", true);
 
                 if (InAir || IsJumping)

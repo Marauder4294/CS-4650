@@ -51,14 +51,14 @@ public class GameManager : MonoBehaviour {
                 if (inputManager.controllerType.ToString() != "Keyboard")
                 {
                     EventManager.MoveInitiated(inputManager.GetAxis(InputManager.InputKey.LeftThumstickX), inputManager.GetAxis(InputManager.InputKey.LeftThumstickY));
-                    //EventManager.AvoidInitiated(Input.GetAxis(inputManager.RightThumstickY), Input.GetAxis(inputManager.RightThumstickX));
+                    EventManager.AvoidInitiated(inputManager.GetAxis(InputManager.InputKey.RightThumstickX), inputManager.GetAxis(InputManager.InputKey.RightThumstickY));
                 }
                 else
                 {
                     EventManager.MoveInitiated(inputManager.GetKeyboardAxis(InputManager.InputKey.KeyboardMoveUp, InputManager.InputKey.KeyboardMoveDown),
                         inputManager.GetKeyboardAxis(InputManager.InputKey.KeyboardMoveRight, InputManager.InputKey.KeyboardMoveLeft));
-                    //EventManager.AvoidInitiated(inputManager.GetKeyboardAxis(InputManager.InputKey.KeyboardAvoidUp, InputManager.InputKey.KeyboardAvoidDown),
-                    //    inputManager.GetKeyboardAxis(InputManager.InputKey.KeyboardAvoidLeft, InputManager.InputKey.KeyboardAvoidRight));
+                    EventManager.AvoidInitiated(inputManager.GetKeyboardAxis(InputManager.InputKey.KeyboardAvoidUp, InputManager.InputKey.KeyboardAvoidDown),
+                        inputManager.GetKeyboardAxis(InputManager.InputKey.KeyboardAvoidLeft, InputManager.InputKey.KeyboardAvoidRight));
                 }
 
                 if (inputManager.GetButtonDown(InputManager.InputKey.Attack))
@@ -95,26 +95,6 @@ public class GameManager : MonoBehaviour {
         }
     }
 
-    //private void FixedUpdate()
-    //{
-    //    if (!isPaused)
-    //    {
-    //        if (inputManager.controllerType.ToString() != "Keyboard")
-    //        {
-    //            EventManager.MoveInitiated(inputManager.GetAxis(InputManager.InputKey.LeftThumstickX), inputManager.GetAxis(InputManager.InputKey.LeftThumstickY));
-    //            //EventManager.AvoidInitiated(Input.GetAxis(inputManager.RightThumstickY), Input.GetAxis(inputManager.RightThumstickX));
-    //        }
-    //        else
-    //        {
-    //            EventManager.MoveInitiated(inputManager.GetKeyboardAxis(InputManager.InputKey.KeyboardMoveUp, InputManager.InputKey.KeyboardMoveDown),
-    //                inputManager.GetKeyboardAxis(InputManager.InputKey.KeyboardMoveRight, InputManager.InputKey.KeyboardMoveLeft));
-    //            //EventManager.AvoidInitiated(inputManager.GetKeyboardAxis(InputManager.InputKey.KeyboardAvoidUp, InputManager.InputKey.KeyboardAvoidDown),
-    //            //    inputManager.GetKeyboardAxis(InputManager.InputKey.KeyboardAvoidLeft, InputManager.InputKey.KeyboardAvoidRight));
-    //        }
-
-    //    }
-    //}
-
     private void PauseToggle()
     {
         if (!isPaused)
@@ -138,9 +118,7 @@ public class GameManager : MonoBehaviour {
             exitHighlight.enabled = false;
         }
     }
-
-
-    // TODO Refactor Pause Menu
+    
     private void PauseMenu(float moveY, bool actionButton)
     {
         if ((Mathf.Abs(moveY) >= 0.5f) && selectionTimer == 0)
