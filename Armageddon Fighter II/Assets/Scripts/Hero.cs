@@ -15,8 +15,7 @@ public class Hero : Entity {
     float cameraRotationOffSetY;
 
     public GameObject lightning;
-
-    float attackTimerSeconds;
+    
     float stickSpeed;
 
     Vector2 uiMaxHealthWhiteSize;
@@ -65,6 +64,7 @@ public class Hero : Entity {
 
         MovementSpeed = 0.1f;
         AttackSpeed = 1.6f;
+        AttackWaitTime = 3;
 
         SetInitialValues();
 
@@ -91,9 +91,9 @@ public class Hero : Entity {
         Health = MaxHealth;
         Mana = MaxMana;
 
-        MagicOneCost = 1;
+        MagicOneCost = 2;
         MagicTwoCost = 15;
-        MagicThreeCost = 50;
+        MagicThreeCost = 25;
 
         #endregion Base Attribute Setter
         
@@ -111,8 +111,7 @@ public class Hero : Entity {
         #endregion Common Variable Setup
 
         #region Set Hero-Specific Variables
-
-        attackTimerSeconds = 3;
+        
         Image[] images = FindObjectsOfType<Image>();
 
         uiMaxHealthWhiteSize = images.First(a => a.name == "PlayerHealthBarOutline").rectTransform.sizeDelta;
@@ -288,7 +287,7 @@ public class Hero : Entity {
     {
         if (AttackLockTimer == -1 && !IsKnockedDown)
         {
-            if (AttackCount >= 5)
+            if (AttackCount >= MaxAttackNumber)
             {
                 AttackCount = 0;
             }
@@ -298,7 +297,7 @@ public class Hero : Entity {
                 AttackCount++;
                 AttackLockTimer = AttackAnimTimes[AttackCount];
                 WindUpLockTimer = WindUpAnimTimes[AttackCount];
-                AttackTimer = (AttackCount == 1) ? AttackLockTimer : attackTimerSeconds / AttackSpeed;
+                AttackTimer = (AttackCount == 1) ? AttackLockTimer : AttackWaitTime / AttackSpeed;
                 MoveTimer = AttackLockTimer;
                 JumpTimer = AttackLockTimer;
                 
@@ -306,7 +305,7 @@ public class Hero : Entity {
             }
             else
             {
-                AttackCount = 6;
+                AttackCount = MaxAttackNumber + 1;
                 SetWeapon(true);
                 AttackLockTimer = AttackAnimTimes[AttackCount];
             }
@@ -494,7 +493,7 @@ public class Hero : Entity {
                 Anim.SetInteger("AttackNumber", AttackCount);
                 AttackLockTimer = AttackAnimTimes[AttackCount];
                 MoveTimer = AttackLockTimer;
-                AttackTimer = attackTimerSeconds / AttackSpeed;
+                AttackTimer = AttackWaitTime / AttackSpeed;
             }
             else
             {

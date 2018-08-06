@@ -26,6 +26,7 @@ public class Zombie : Entity
         MovementSpeed = 0.05f;
         AttackSpeed = 1;
         StunLength = 2;
+        AttackWaitTime = 2;
 
         SetInitialValues();
 

@@ -76,6 +76,7 @@ public class Entity : MonoBehaviour {
     protected bool IsBlocking { get; set; }
     protected float AttackTimer { get; set; }
     protected float AttackLockTimer { get; set; }
+    protected float AttackWaitTime { get; set; }
     protected float WindUpLockTimer { get; set; }
     protected float StunTimer { get; set; }
     protected float StunLength { get; set; }
@@ -330,7 +331,7 @@ public class Entity : MonoBehaviour {
                 AttackLockTimer = AttackAnimTimes[0];
                 WindUpLockTimer = WindUpAnimTimes[0];
 
-                AttackTimer = AttackLockTimer + 2;
+                AttackTimer = AttackLockTimer;
                 MoveTimer = AttackTimer;
 
                 fighter.transform.LookAt(new Vector3(Player.transform.position.x, PositionY, Player.transform.position.z));
@@ -338,6 +339,7 @@ public class Entity : MonoBehaviour {
                 SetAttacking(true);
 
                 AttackCount = (AttackCount < MaxAttackNumber) ? ++AttackCount : 0;
+                Anim.SetInteger("AttackNumber", AttackCount);
             }
             else if (other.gameObject.tag == "Ground")
             {
@@ -370,18 +372,21 @@ public class Entity : MonoBehaviour {
             else if (other.gameObject.tag == "Player" && !IsKnockedDown && AttackTimer == -1 && StunTimer == -1)
             {
                 WindUpLockTimer = WindUpAnimTimes[0];
-                AttackLockTimer = AttackAnimTimes[0];
 
-                AttackTimer = AttackLockTimer + 1;
+                AttackCount = (AttackCount < MaxAttackNumber && AttackAnimTimes.Length - 1 >= AttackCount + 1) ? ++AttackCount : 0;
 
-                SetMoving(false);
+                AttackLockTimer = AttackAnimTimes[AttackCount];
+
+                AttackTimer = AttackLockTimer + AttackWaitTime;
+
+                if (IsMoving) SetMoving(false);
 
                 if (!IsAttacking) SetAttacking(true);
 
                 fighter.transform.LookAt(new Vector3(Player.transform.position.x, PositionY, Player.transform.position.z));
                 MoveTimer = 3;
-
-                AttackCount = (AttackCount < 2) ? ++AttackCount : 0;
+                
+                Anim.SetInteger("AttackNumber", AttackCount);
             }
         }
     }
