@@ -259,7 +259,7 @@ public class Entity : MonoBehaviour {
 
     protected void SetJumping(bool IsAction)
     {
-        IsJumping = IsAction;
+        InAir = IsAction;
         Anim.SetBool("Jumping", IsAction);
     }
 
@@ -326,7 +326,7 @@ public class Entity : MonoBehaviour {
 
                 if (IsAttacking) SetAttacking(false);
             }
-            else if (other.gameObject.tag == "Player" && !IsKnockedDown && AttackLockTimer == -1 && StunTimer == -1)
+            else if (other.gameObject.tag == "Player" && !IsKnockedDown && !InAir && AttackLockTimer == -1 && StunTimer == -1)
             {
                 AttackLockTimer = AttackAnimTimes[0];
                 WindUpLockTimer = WindUpAnimTimes[0];
@@ -341,10 +341,10 @@ public class Entity : MonoBehaviour {
                 AttackCount = (AttackCount < MaxAttackNumber) ? ++AttackCount : 0;
                 Anim.SetInteger("AttackNumber", AttackCount);
             }
-            else if (other.gameObject.tag == "Ground")
+            else if (other.gameObject.tag == "Ground" && !Rigid.isKinematic)
             {
-                InAir = false;
                 Rigid.isKinematic = true;
+                if (IsAttacking) SetAttacking(false);
             }
             else if (other.gameObject.tag == "DeathBoundary")
             {

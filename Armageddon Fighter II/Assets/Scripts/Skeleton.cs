@@ -9,6 +9,10 @@ public class Skeleton : Entity
 
     public GameObject skeleton;
 
+    System.Random rJumpAttack;
+
+    float? yAttackMove = 0;
+
     void Awake()
     {
         #region Common Variable Setup
@@ -30,7 +34,11 @@ public class Skeleton : Entity
         StunLength = 2;
         AttackWaitTime = 1;
 
+        rJumpAttack = new System.Random();
+
         SetInitialValues();
+        JumpPower = 4;
+        JumpHeight = JumpPower;
 
         #region Base Attribute Setter
 
@@ -69,9 +77,10 @@ public class Skeleton : Entity
 
         AnimationClip[] clip = Anim.runtimeAnimatorController.animationClips;
 
-        AttackAnimTimes = new float[3];
+        AttackAnimTimes = new float[4];
         AttackAnimTimes[1] = clip.First(a => a.name == "Attack_1").length / AttackSpeed;
         AttackAnimTimes[2] = clip.First(a => a.name == "Attack_2").length / AttackSpeed;
+        AttackAnimTimes[3] = clip.First(a => a.name == "Jump_Attack").length / AttackSpeed;
         AttackAnimTimes[0] = AttackAnimTimes[1] + AttackAnimTimes[2];
 
         WindUpAnimTimes = new float[1];
@@ -89,16 +98,36 @@ public class Skeleton : Entity
     {
         if (IsActive && !IsDead && !Player.IsDead)
         {
-            if (IsActive && !IsAttacking && MoveTimer == -1 && !IsKnockedDown && StunTimer == -1)
+            if (!IsAttacking && MoveTimer == -1 && !IsKnockedDown && StunTimer == -1)
             {
-                if (!IsMoving)
+                if (!IsMoving && !InAir)
                 {
                     SetMoving(true);
                     SetWeapon(false);
                 }
+                
+                if (!InAir && rJumpAttack.Next(0, 100) < 15 && false)
+                {
+                    SetJumping(true);
+                    Anim.SetBool("Landing", false);
+                    if (IsMoving) SetMoving(false);
+                    if (IsAttacking) SetAttacking(false);
+                    if (Weapon[0].enabled) SetWeapon(false);
+                    IsGoingUp = true;
+                    Rigid.isKinematic = false;
 
-                skeleton.transform.LookAt(new Vector3(Player.transform.position.x, PositionY, Player.transform.position.z));
-                skeleton.transform.position += skeleton.transform.forward * MovementSpeed;
+                    movement.y = 0.15f;
+                    JumpHeight = skeleton.transform.position.y + JumpPower;
+                }
+                else if (IsMoving)
+                {
+                    skeleton.transform.LookAt(new Vector3(Player.transform.position.x, PositionY, Player.transform.position.z));
+                    skeleton.transform.position += skeleton.transform.forward * MovementSpeed;
+                }
+            }
+            else if (InAir && IsAttacking && JumpTimer == -1)
+            {
+                skeleton.transform.position += new Vector3((movement.x * (MovementSpeed / 10)), ((movement.y / (float)yAttackMove) * (MovementSpeed / 10)), (movement.x * (MovementSpeed / 10)));
             }
 
             DecrementAttackLockTimer();
@@ -162,11 +191,45 @@ public class Skeleton : Entity
         }
         else if (AttackLockTimer > -1)
         {
-            if (AttackCount == MaxAttackNumber)
+            if (AttackCount >= MaxAttackNumber && !InAir)
             {
                 AttackLockTimer = -1;
                 SetAttacking(false);
                 SetWeapon(false);
+            }
+        }
+    }
+
+    protected override void JumpUp()
+    {
+        if (InAir == true && IsGoingUp == true)
+        {
+            if (Ent.transform.position.y >= JumpHeight)
+            {
+                IsGoingUp = false;
+                movement.y = -JumpPower;
+                movement.x = (Player.transform.position.x - skeleton.transform.position.x) / JumpPower;
+                movement.z = (Player.transform.position.z - skeleton.transform.position.z) / JumpPower;
+
+                SetAttacking(true);
+                SetWeapon(true);
+                AttackCount = 3;
+
+                if (movement.x >= movement.z)
+                {
+                    yAttackMove = movement.x;
+                }
+                else
+                {
+                    yAttackMove = movement.z;
+                }
+
+                skeleton.transform.position += new Vector3((movement.x * (MovementSpeed / 10)), ((movement.y / (float)yAttackMove) * (MovementSpeed / 10)), (movement.x * (MovementSpeed / 10)));
+            }
+            else
+            {
+                skeleton.transform.position += movement;
+                skeleton.transform.LookAt(new Vector3(Player.transform.position.x, PositionY, Player.transform.position.z));
             }
         }
     }

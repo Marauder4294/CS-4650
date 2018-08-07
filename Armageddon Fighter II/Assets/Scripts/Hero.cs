@@ -531,6 +531,9 @@ public class Hero : Entity {
         else if (DeathTimer > -1)
         {
             DeathTimer = -1;
+            Time.timeScale = 0;
+
+            FindObjectOfType<GameManager>().GameOverToggle();
         }
     }
 

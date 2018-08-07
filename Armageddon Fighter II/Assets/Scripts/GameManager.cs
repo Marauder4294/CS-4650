@@ -154,4 +154,9 @@ public class GameManager : MonoBehaviour {
             --selectionTimer;
         }
     }
+
+    public void GameOverToggle()
+    {
+
+    }
 }
