@@ -13,7 +13,7 @@ public class Skeleton : Entity
 
     public AudioClip[] soundClip;
 
-    void Awake()
+    void Start()
     {
         #region Common Variable Setup
 

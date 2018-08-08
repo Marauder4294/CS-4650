@@ -54,7 +54,7 @@ public class Hero : Entity {
 
     #endregion Hero-Specific Variable Declarations
 
-    void Awake()
+    void Start()
     {
         #region Common Variable Setup
 

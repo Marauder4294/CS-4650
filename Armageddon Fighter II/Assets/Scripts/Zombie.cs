@@ -8,7 +8,7 @@ public class Zombie : Entity
     public GameObject zombie;
     public AudioClip[] soundClip;
 
-    void Awake ()
+    void Start ()
     {
         #region Common Variable Setup
 
