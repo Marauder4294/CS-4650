@@ -5,13 +5,13 @@ using UnityEngine;
 
 public class Skeleton : Entity
 {
-    // TODO Add JumpAttack to Skeleton
-
     public GameObject skeleton;
 
     System.Random rJumpAttack;
 
     float? yAttackMove = 0;
+
+    public AudioClip[] soundClip;
 
     void Awake()
     {
@@ -34,9 +34,12 @@ public class Skeleton : Entity
         StunLength = 2;
         AttackWaitTime = 1;
 
+        ExperienceEndowment = 10;
+
         rJumpAttack = new System.Random();
 
-        SetInitialValues();
+        SetInitialValues(soundClip);
+
         JumpPower = 4;
         JumpHeight = JumpPower;
 

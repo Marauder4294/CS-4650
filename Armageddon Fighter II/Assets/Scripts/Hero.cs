@@ -7,14 +7,14 @@ using UnityEngine.UI;
 
 public class Hero : Entity {
 
-    // TODO Create method to set level and attributes for HERO ONLY
-
     #region Hero-Specific Variable Declarations
 
     Vector3 cameraOffset;
     float cameraRotationOffSetY;
 
     public GameObject lightning;
+
+    public AudioClip[] soundClip;
     
     float stickSpeed;
 
@@ -30,6 +30,12 @@ public class Hero : Entity {
     RectTransform uiImageManaWhiteCurrent;
     RectTransform uiImageManaBlueCurrent;
 
+    Vector2 uiMaxExperienceSize;
+    RectTransform uiExperienceCurrent;
+
+    float maxExperience;
+    float currentExperience;
+
     float? landingAnimTime;
     float? avoidAnimTime;
     readonly float?[] magicAnimTimes = new float?[4];
@@ -41,6 +47,8 @@ public class Hero : Entity {
     bool isMagicOne;
     bool isMagicTwo;
     bool isMagicThree;
+
+    bool hasWon;
 
     float? magicLockTimer;
 
@@ -62,11 +70,19 @@ public class Hero : Entity {
         KnockbackPowerHeight = 2f;
         KnockbackPowerLength = 4.5f;
 
+        maxExperience = 15;
+        currentExperience = 0;
+
         MovementSpeed = 0.1f;
         AttackSpeed = 1.6f;
         AttackWaitTime = 3;
 
-        SetInitialValues();
+        ExperienceEndowment = 0;
+
+        SetInitialValues(soundClip);
+
+        hasWon = false;
+        Anim.SetBool("Win", hasWon);
 
         avoidTimer = -1;
 
@@ -126,32 +142,13 @@ public class Hero : Entity {
         uiImageManaWhiteCurrent = images.First(a => a.name == "PlayerManaBarOutline").rectTransform;
         uiImageManaBlueCurrent = images.First(a => a.name == "PlayerManaBar").rectTransform;
 
-        AnimationClip[] clip = Anim.runtimeAnimatorController.animationClips;
+        uiMaxExperienceSize = images.First(a => a.name == "PlayerExperienceBar").rectTransform.sizeDelta;
+        uiExperienceCurrent = images.First(a => a.name == "PlayerExperienceBar").rectTransform;
 
         WindUpAnimTimes = new float[6];
-        WindUpAnimTimes[1] = (clip.First(a => a.name == "Attack_1-WindUp").length / 3) / AttackSpeed;
-        WindUpAnimTimes[2] = 0;
-        WindUpAnimTimes[3] = (clip.First(a => a.name == "Attack_3-WindUp").length / 3) / AttackSpeed;
-        WindUpAnimTimes[4] = WindUpAnimTimes[3];
-        WindUpAnimTimes[5] = (clip.First(a => a.name == "Attack_4-WindUp").length / 3) / AttackSpeed;
-        WindUpAnimTimes[0] = WindUpAnimTimes[1] + WindUpAnimTimes[2] + WindUpAnimTimes[3] + WindUpAnimTimes[4] + WindUpAnimTimes[5];
-
         AttackAnimTimes = new float[7];
-        AttackAnimTimes[1] = (WindUpAnimTimes[1] + clip.First(a => a.name == "Attack_1").length / 1) / AttackSpeed;
-        AttackAnimTimes[2] = (clip.First(a => a.name == "Attack_2").length / 1) / AttackSpeed;
-        AttackAnimTimes[3] = (WindUpAnimTimes[3] + clip.First(a => a.name == "Attack_3").length / 1) / AttackSpeed;
-        AttackAnimTimes[4] = AttackAnimTimes[3];
-        AttackAnimTimes[5] = (WindUpAnimTimes[5] + clip.First(a => a.name == "Attack_4").length / 1) / AttackSpeed;
 
-        AttackAnimTimes[6] = (clip.First(a => a.name == "Jump_Attack").length / 1) / AttackSpeed;
-        AttackAnimTimes[0] = AttackAnimTimes[1] + AttackAnimTimes[2] + AttackAnimTimes[3] + AttackAnimTimes[4] + AttackAnimTimes[5];
-
-        landingAnimTime = clip.First(a => a.name == "Jump_Landing").length / 5;
-
-        magicAnimTimes[1] = (clip.First(a => a.name == "Magic_One").length / 2) / AttackSpeed;
-        magicAnimTimes[0] = magicAnimTimes[1];
-
-        avoidAnimTime = clip.First(a => a.name == "Aviod_Front").length;
+        GetAnimationSpeeds();
 
         cameraOffset = new Vector3(Camera.main.transform.position.x - Player.transform.position.x, 
             Camera.main.transform.position.y - Player.transform.position.y, 
@@ -177,6 +174,8 @@ public class Hero : Entity {
         SetMagicThree(false);
 
         #endregion Set Hero-Specific Variables
+
+        uiExperienceCurrent.sizeDelta = new Vector2(0, uiMaxExperienceSize.y);
     }
 
     private void OnDestroy()
@@ -186,101 +185,112 @@ public class Hero : Entity {
 
     public void OnMove(float moveX, float moveY)
     {
-        if (!IsDead)
+        if (!hasWon)
         {
-            if ((moveX != 0 || moveY != 0) && MoveTimer == -1 && avoidTimer == -1 && magicLockTimer == -1 && !IsKnockedDown)
+            if (!IsDead)
             {
-                SetMoving(true);
+                if ((moveX != 0 || moveY != 0) && MoveTimer == -1 && avoidTimer == -1 && magicLockTimer == -1 && !IsKnockedDown)
+                {
+                    SetMoving(true);
+                }
+                else
+                {
+                    SetMoving(false);
+                }
+
+                if (IsMoving)
+                {
+                    Player.transform.LookAt(new Vector3(Player.transform.position.x + moveX, Player.transform.position.y, Player.transform.position.z + moveY));
+                    Player.transform.eulerAngles = new Vector3(0, Player.transform.eulerAngles.y + cameraRotationOffSetY, 0);
+
+                    if (!IsTouchingBoundary && !IsBlocking)
+                    {
+                        if (moveX != 0 && moveY != 0)
+                        {
+                            stickSpeed = (Mathf.Abs(moveX) + Mathf.Abs(moveY)) / 2;
+                        }
+                        else if (moveX != 0)
+                        {
+                            stickSpeed = Mathf.Abs(moveX);
+                        }
+                        else if (moveY != 0)
+                        {
+                            stickSpeed = Mathf.Abs(moveY);
+                        }
+
+                        Player.transform.position += new Vector3(((Player.transform.forward.x * MovementSpeed) * stickSpeed), 0, ((Player.transform.forward.z * MovementSpeed) * stickSpeed));
+                    }
+                }
+                else if ((moveX != 0 || moveY != 0) && IsKnockedDown && !IsFallingBack)
+                {
+                    KnockDownTimer = -1;
+                    SetKnockedDown(false);
+                }
+
+                if (!IsMoving) stickSpeed = 0;
+
+                Anim.SetFloat("MoveSpeed", (MovementSpeed * 14) * stickSpeed);
+
+                DecrementAttackLockTimer();
+                DecrementWindUpLockTimer();
+                DecrementAttackTimer();
+                DecrementMagicTimer();
+                DecrementJumpTimer();
+                DecrementMoveTimer();
+                DecrementStunTimer();
+                JumpUp();
+
+                if (!IsBlocking || IsKnockedDown)
+                    Camera.main.transform.position = new Vector3(Player.transform.position.x + cameraOffset.x, Camera.main.transform.position.y, Player.transform.position.z + cameraOffset.z);
             }
             else
             {
-                SetMoving(false);
+                DecrementDeathTimer();
             }
 
-            if (IsMoving)
-            {
-                Player.transform.LookAt(new Vector3(Player.transform.position.x + moveX, Player.transform.position.y, Player.transform.position.z + moveY));
-                Player.transform.eulerAngles = new Vector3(0, Player.transform.eulerAngles.y + cameraRotationOffSetY, 0);
-
-                if (!IsTouchingBoundary && !IsBlocking)
-                {
-                    if (moveX != 0 && moveY != 0)
-                    {
-                        stickSpeed = (Mathf.Abs(moveX) + Mathf.Abs(moveY)) / 2;
-                    }
-                    else if (moveX != 0)
-                    {
-                        stickSpeed = Mathf.Abs(moveX);
-                    }
-                    else if (moveY != 0)
-                    {
-                        stickSpeed = Mathf.Abs(moveY);
-                    }
-
-                    Player.transform.position += new Vector3(((Player.transform.forward.x * MovementSpeed) * stickSpeed), 0, ((Player.transform.forward.z * MovementSpeed) * stickSpeed));
-                }
-            }
-            else if ((moveX != 0 || moveY != 0) && IsKnockedDown && !IsFallingBack)
-            {
-                KnockDownTimer = -1;
-                SetKnockedDown(false);
-            }
-
-            if (!IsMoving) stickSpeed = 0;
-
-            Anim.SetFloat("MoveSpeed", (MovementSpeed * 14) * stickSpeed);
-
-            DecrementAttackLockTimer();
-            DecrementWindUpLockTimer();
-            DecrementAttackTimer();
-            DecrementMagicTimer();
-            DecrementJumpTimer();
-            DecrementMoveTimer();
-            DecrementStunTimer();
-            JumpUp();
-
-            if (!IsBlocking || IsKnockedDown)
-                Camera.main.transform.position = new Vector3(Player.transform.position.x + cameraOffset.x, Camera.main.transform.position.y, Player.transform.position.z + cameraOffset.z);
+            Fallback();
+            DecrementKnockDownTimer();
         }
         else
         {
-            DecrementDeathTimer();
+            Player.transform.eulerAngles = new Vector3(0, cameraRotationOffSetY, 0);
+            FindObjectOfType<GameManager>().GameOverToggle(true);
         }
-
-        Fallback();
-        DecrementKnockDownTimer();
     }
 
     public void OnAvoid(float avoidX, float avoidY)
     {
-        if (!IsDead && avoidTimer == -1)
+        if (!hasWon)
         {
-            if ((avoidX != 0 || avoidY != 0) && magicLockTimer == -1 && !IsKnockedDown)
+            if (!IsDead && avoidTimer == -1)
             {
-                SetAvoiding(true);
+                if ((avoidX != 0 || avoidY != 0) && magicLockTimer == -1 && !IsKnockedDown)
+                {
+                    SetAvoiding(true);
+                }
+                else
+                {
+                    SetAvoiding(false);
+                }
+
+                if (IsAvoiding && !IsTouchingBoundary && !IsBlocking)
+                {
+                    if (IsMoving) SetMoving(false);
+
+                    Player.transform.LookAt(new Vector3(Player.transform.position.x + avoidX, Player.transform.position.y, Player.transform.position.z + avoidY));
+                    Player.transform.eulerAngles = new Vector3(0, Player.transform.eulerAngles.y + cameraRotationOffSetY, 0);
+
+                    avoidTimer = avoidAnimTime;
+
+                    //Anim.SetFloat("AvoidSpeed", 14);
+                }
+
+                if (!IsBlocking || IsKnockedDown)
+                    Camera.main.transform.position = new Vector3(Player.transform.position.x + cameraOffset.x, Camera.main.transform.position.y, Player.transform.position.z + cameraOffset.z);
             }
-            else
-            {
-                SetAvoiding(false);
-            }
 
-            if (IsAvoiding && !IsTouchingBoundary && !IsBlocking)
-            {
-                if (IsMoving) SetMoving(false);
-
-                Player.transform.LookAt(new Vector3(Player.transform.position.x + avoidX, Player.transform.position.y, Player.transform.position.z + avoidY));
-                Player.transform.eulerAngles = new Vector3(0, Player.transform.eulerAngles.y + cameraRotationOffSetY, 0);
-
-                avoidTimer = avoidAnimTime;
-
-                //Anim.SetFloat("AvoidSpeed", 14);
-            }
-
-            if (!IsBlocking || IsKnockedDown)
-                Camera.main.transform.position = new Vector3(Player.transform.position.x + cameraOffset.x, Camera.main.transform.position.y, Player.transform.position.z + cameraOffset.z);
+            DecrementAvoidTimer();
         }
-
-        DecrementAvoidTimer();
     }
 
     public void OnAttack()
@@ -312,6 +322,8 @@ public class Hero : Entity {
 
             SetAttacking(true);
             Anim.SetInteger("AttackNumber", AttackCount);
+
+            Audio.PlayOneShot(SoundClip[1]);
         }
         else if (AttackCount == 1 && !NextAttack)
         {
@@ -321,21 +333,24 @@ public class Hero : Entity {
 
     public void OnJump()
     {
-        if (!InAir && JumpTimer == -1 && !IsKnockedDown)
+        if (!hasWon)
         {
-            InAir = true;
-            Anim.SetBool("Jumping", true);
-            Anim.SetBool("Landing", false);
-            Anim.SetBool("Attacking", false);
-            Rigid.isKinematic = false;
+            if (!InAir && JumpTimer == -1 && !IsKnockedDown)
+            {
+                InAir = true;
+                Anim.SetBool("Jumping", true);
+                Anim.SetBool("Landing", false);
+                Anim.SetBool("Attacking", false);
+                Rigid.isKinematic = false;
 
-            IsGoingUp = true;
+                IsGoingUp = true;
 
-            JumpHeight = Player.transform.position.y + JumpPower;
+                JumpHeight = Player.transform.position.y + JumpPower;
 
-            movement.y = 0.15f;
+                movement.y = 0.15f;
 
-            Player.transform.position += movement;
+                Player.transform.position += movement;
+            }
         }
     }
 
@@ -421,7 +436,7 @@ public class Hero : Entity {
         TriggerExit(gameObject, other);
     }
 
-    void DecrementMagicTimer()
+    private void DecrementMagicTimer()
     {
         if (magicLockTimer > 0)
         {
@@ -460,7 +475,7 @@ public class Hero : Entity {
         }
     }
 
-    void DecrementAvoidTimer()
+    private void DecrementAvoidTimer()
     {
         if (avoidTimer > 0)
         {
@@ -476,6 +491,90 @@ public class Hero : Entity {
         }
     }
 
+    public void GiveExperience(float experience)
+    {
+        currentExperience += experience;
+
+        if (currentExperience >= maxExperience)
+        {
+            currentExperience = maxExperience - currentExperience;
+            LevelUp();
+        }
+
+        if (currentExperience > 0)
+        {
+            uiExperienceCurrent.sizeDelta = new Vector2(uiMaxExperienceSize.x * (currentExperience / maxExperience), uiMaxExperienceSize.y);
+        }
+        else
+        {
+            uiExperienceCurrent.sizeDelta = new Vector2(0, uiMaxExperienceSize.y);
+        }
+
+        
+    }
+
+    private void LevelUp()
+    {
+        Level++;
+
+        Power += 2;
+        Magic += 1;
+        Defense += 2;
+        Block += 1;
+        Vitality += 2;
+
+        MaxHealth = (Vitality * 2) + (Level * 2);
+        MaxMana = Magic + Level;
+
+        Health = MaxHealth;
+        Mana = MaxMana;
+
+        maxExperience *= 2;
+
+        MovementSpeed += 0.001f;
+        AttackSpeed += 0.01f;
+
+        uiImageHealthWhiteCurrent.sizeDelta = new Vector2(uiMaxHealthWhiteSize.x, uiMaxHealthWhiteSize.y);
+        uiImageHealthRedCurrent.sizeDelta = new Vector2(uiMaxHealthRedSize.x, uiMaxHealthRedSize.y);
+
+        uiImageManaWhiteCurrent.sizeDelta = new Vector2(uiMaxManaWhiteSize.x, uiMaxManaWhiteSize.y);
+        uiImageManaBlueCurrent.sizeDelta = new Vector2(uiMaxManaBlueSize.x, uiMaxManaBlueSize.y);
+
+        GetAnimationSpeeds();
+
+        Audio.PlayOneShot(SoundClip[3]);
+    }
+
+    private void GetAnimationSpeeds()
+    {
+        AnimationClip[] clip = Anim.runtimeAnimatorController.animationClips;
+
+        WindUpAnimTimes = new float[6];
+        WindUpAnimTimes[1] = (clip.First(a => a.name == "Attack_1-WindUp").length / 3) / AttackSpeed;
+        WindUpAnimTimes[2] = 0;
+        WindUpAnimTimes[3] = (clip.First(a => a.name == "Attack_3-WindUp").length / 3) / AttackSpeed;
+        WindUpAnimTimes[4] = WindUpAnimTimes[3];
+        WindUpAnimTimes[5] = (clip.First(a => a.name == "Attack_4-WindUp").length / 3) / AttackSpeed;
+        WindUpAnimTimes[0] = WindUpAnimTimes[1] + WindUpAnimTimes[2] + WindUpAnimTimes[3] + WindUpAnimTimes[4] + WindUpAnimTimes[5];
+
+        AttackAnimTimes = new float[7];
+        AttackAnimTimes[1] = (WindUpAnimTimes[1] + clip.First(a => a.name == "Attack_1").length / 1) / AttackSpeed;
+        AttackAnimTimes[2] = (clip.First(a => a.name == "Attack_2").length / 1) / AttackSpeed;
+        AttackAnimTimes[3] = (WindUpAnimTimes[3] + clip.First(a => a.name == "Attack_3").length / 1) / AttackSpeed;
+        AttackAnimTimes[4] = AttackAnimTimes[3];
+        AttackAnimTimes[5] = (WindUpAnimTimes[5] + clip.First(a => a.name == "Attack_4").length / 1) / AttackSpeed;
+
+        AttackAnimTimes[6] = (clip.First(a => a.name == "Jump_Attack").length / 1) / AttackSpeed;
+        AttackAnimTimes[0] = AttackAnimTimes[1] + AttackAnimTimes[2] + AttackAnimTimes[3] + AttackAnimTimes[4] + AttackAnimTimes[5];
+
+        landingAnimTime = clip.First(a => a.name == "Jump_Landing").length / 5;
+
+        magicAnimTimes[1] = (clip.First(a => a.name == "Magic_One").length / 2) / AttackSpeed;
+        magicAnimTimes[0] = magicAnimTimes[1];
+
+        avoidAnimTime = clip.First(a => a.name == "Aviod_Front").length;
+    }
+
     #region Entity Method Overrides
 
     protected override void DecrementAttackLockTimer()
@@ -486,20 +585,27 @@ public class Hero : Entity {
         }
         else if (AttackLockTimer > -1)
         {
-            if (AttackCount == 1 && NextAttack)
+            if (!hasWon)
             {
-                NextAttack = false;
-                AttackCount++;
-                Anim.SetInteger("AttackNumber", AttackCount);
-                AttackLockTimer = AttackAnimTimes[AttackCount];
-                MoveTimer = AttackLockTimer;
-                AttackTimer = AttackWaitTime / AttackSpeed;
+                if (AttackCount == 1 && NextAttack)
+                {
+                    NextAttack = false;
+                    AttackCount++;
+                    Anim.SetInteger("AttackNumber", AttackCount);
+                    AttackLockTimer = AttackAnimTimes[AttackCount];
+                    MoveTimer = AttackLockTimer;
+                    AttackTimer = AttackWaitTime / AttackSpeed;
+                }
+                else
+                {
+                    AttackLockTimer = -1;
+                    SetWeapon(false);
+                    SetAttacking(false);
+                }
             }
             else
             {
-                AttackLockTimer = -1;
-                SetWeapon(false);
-                SetAttacking(false);
+                FindObjectOfType<GameManager>().GameOverToggle(true);
             }
         }
     }
@@ -531,9 +637,6 @@ public class Hero : Entity {
         else if (DeathTimer > -1)
         {
             DeathTimer = -1;
-            Time.timeScale = 0;
-
-            FindObjectOfType<GameManager>().GameOverToggle();
         }
     }
 
@@ -603,15 +706,24 @@ public class Hero : Entity {
                 Player.transform.Find("HalfOne").GetComponent<SkinnedMeshRenderer>().enabled = false;
                 Player.transform.Find("HalfTwo").GetComponent<SkinnedMeshRenderer>().enabled = false;
                 Player.transform.Find("Shield").GetComponent<SkinnedMeshRenderer>().enabled = false;
+
+                Audio.PlayOneShot(SoundClip[2]);
+
+                FindObjectOfType<GameManager>().GameOverToggle(false);
+
                 IsKnockedDown = true;
                 Death(Ent);
             }
         }
-        else
+        else if (IsDead)
         {
             if (other.gameObject.tag == "Ground" && !Rigid.isKinematic)
             {
                 Rigid.isKinematic = true;
+
+                Audio.PlayOneShot(SoundClip[2]);
+
+                FindObjectOfType<GameManager>().GameOverToggle(false);
             }
         }
     }

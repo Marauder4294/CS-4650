@@ -2573,6 +2573,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lightning: {fileID: 1745514529953892, guid: e0ae27d29a9a4684f9b096cba8d92fed, type: 2}
+  soundClip:
+  - {fileID: 8300000, guid: a588f13fc0234ba43ac7b090c5b1ac28, type: 3}
+  - {fileID: 8300000, guid: e2a9f12e4fd977c4aa09398d7e002ef6, type: 3}
+  - {fileID: 8300000, guid: cef23c7d1a45e3b4c8cbfa93ec1e39d5, type: 3}
+  - {fileID: 8300000, guid: 15b50d5c595392e48bb76ede572f7bdb, type: 3}
 --- !u!114 &114361426230621088
 MonoBehaviour:
   m_ObjectHideFlags: 1

@@ -324,8 +324,8 @@ public class InputManager
             rawImages.First(a => a.name == "BlockButton").texture = textures.First(a => a.name == "PS4 L2 Button");
             rawImages.First(a => a.name == "JumpButton").texture = textures.First(a => a.name == "PS4 Triangle Button");
             rawImages.First(a => a.name == "LightningButton").texture = textures.First(a => a.name == "PS4 Square Button");
-            rawImages.First(a => a.name == "IceBlastButton").texture = textures.First(a => a.name == "PS4 Circle Button");
-            rawImages.First(a => a.name == "FireBoltButton").texture = textures.First(a => a.name == "PS4 R2 Button");
+            //rawImages.First(a => a.name == "IceBlastButton").texture = textures.First(a => a.name == "PS4 Circle Button");
+            //rawImages.First(a => a.name == "FireBoltButton").texture = textures.First(a => a.name == "PS4 R2 Button");
 
             rawImages.First(a => a.name == "RestartHighlight").texture = textures.First(a => a.name == "PS4 X Button");
             rawImages.First(a => a.name == "ExitHighlight").texture = textures.First(a => a.name == "PS4 X Button");
@@ -336,8 +336,8 @@ public class InputManager
             rawImages.First(a => a.name == "BlockButton").texture = textures.First(a => a.name == "XBOX Left Trigger Button");
             rawImages.First(a => a.name == "JumpButton").texture = textures.First(a => a.name == "XBOX Y Button");
             rawImages.First(a => a.name == "LightningButton").texture = textures.First(a => a.name == "XBOX X Button");
-            rawImages.First(a => a.name == "IceBlastButton").texture = textures.First(a => a.name == "XBOX B Button");
-            rawImages.First(a => a.name == "FireBoltButton").texture = textures.First(a => a.name == "XBOX Right Trigger Button");
+            //rawImages.First(a => a.name == "IceBlastButton").texture = textures.First(a => a.name == "XBOX B Button");
+            //rawImages.First(a => a.name == "FireBoltButton").texture = textures.First(a => a.name == "XBOX Right Trigger Button");
 
             rawImages.First(a => a.name == "RestartHighlight").texture = textures.First(a => a.name == "XBOX A Button");
             rawImages.First(a => a.name == "ExitHighlight").texture = textures.First(a => a.name == "XBOX A Button");

@@ -7,6 +7,8 @@ public class Demon : Entity
 {
     public GameObject demon;
 
+    public AudioClip[] soundClip;
+
     void Awake()
     {
         #region Common Variable Setup
@@ -28,7 +30,9 @@ public class Demon : Entity
         StunLength = 2;
         AttackWaitTime = 2;
 
-        SetInitialValues();
+        ExperienceEndowment = 50;
+
+        SetInitialValues(soundClip);
 
         #region Base Attribute Setter
 
@@ -178,6 +182,8 @@ public class Demon : Entity
 
                 AttackCount = MaxAttackNumber;
                 Anim.SetInteger("AttackNumber", AttackCount);
+
+                Audio.PlayOneShot(SoundClip[0]);
             }
             else if (other.gameObject.tag == "Ground" && !Rigid.isKinematic)
             {
@@ -186,6 +192,8 @@ public class Demon : Entity
             }
             else if (other.gameObject.tag == "DeathBoundary")
             {
+                Player.GiveExperience(ExperienceEndowment * 2);
+
                 Destroy(gameObject);
             }
         }
@@ -195,6 +203,10 @@ public class Demon : Entity
             {
                 InAir = false;
                 Rigid.isKinematic = true;
+
+                Audio.PlayOneShot(SoundClip[2]);
+
+                Player.GetComponent<Animator>().SetBool("Win", true);
             }
         }
     }
@@ -223,6 +235,8 @@ public class Demon : Entity
 
                 AttackCount = MaxAttackNumber;
                 Anim.SetInteger("AttackNumber", AttackCount);
+
+                Audio.PlayOneShot(SoundClip[0]);
             }
         }
     }

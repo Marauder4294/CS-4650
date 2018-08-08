@@ -6,6 +6,7 @@ using UnityEngine;
 public class Zombie : Entity
 {
     public GameObject zombie;
+    public AudioClip[] soundClip;
 
     void Awake ()
     {
@@ -28,7 +29,9 @@ public class Zombie : Entity
         StunLength = 2;
         AttackWaitTime = 2;
 
-        SetInitialValues();
+        ExperienceEndowment = 5;
+
+        SetInitialValues(soundClip);
 
         #region Base Attribute Setter
 

@@ -490,6 +490,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 576f7ae0fb3519948b40fec2c5b1fa0c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  soundClip:
+  - {fileID: 8300000, guid: c3f781aa48363bf4da67d747a40e5260, type: 3}
+  - {fileID: 8300000, guid: 5199311da02a5f84aa686a6878b37ac2, type: 3}
 --- !u!137 &137013954913909138
 SkinnedMeshRenderer:
   m_ObjectHideFlags: 1

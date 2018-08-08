@@ -1423,7 +1423,7 @@ Transform:
   m_PrefabInternal: {fileID: 100100000}
   m_GameObject: {fileID: 1291908330036996}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 19.39, y: -0.53, z: -28.1}
+  m_LocalPosition: {x: 82.2, y: 2.47, z: -167.5}
   m_LocalScale: {x: 2, y: 2, z: 2}
   m_Children:
   - {fileID: 4701100533013792}
@@ -2416,6 +2416,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   demon: {fileID: 1291908330036996}
+  soundClip:
+  - {fileID: 8300000, guid: b9190d02d6c1dde4bbf40a80a4cc5cd4, type: 3}
+  - {fileID: 8300000, guid: d961d97a5e00354408122df2ece6a07c, type: 3}
+  - {fileID: 8300000, guid: 4cbcdc26f2895b1429297d26dfc0af4e, type: 3}
 --- !u!114 &114452004187664154
 MonoBehaviour:
   m_ObjectHideFlags: 1

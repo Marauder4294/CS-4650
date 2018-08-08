@@ -13,8 +13,11 @@ public class GameManager : MonoBehaviour {
     bool isPaused;
 
     GameObject pauseMenu;
+    Text pauseMenuText;
     RawImage restartHighlight;
     RawImage exitHighlight;
+
+    bool gameOver;
 
     int selectionTimer;
 
@@ -28,12 +31,17 @@ public class GameManager : MonoBehaviour {
         Image[] images = FindObjectsOfType<Image>();
         RawImage[] rawImages = FindObjectsOfType<RawImage>();
         Texture[] textures = Resources.LoadAll("Buttons", typeof(Texture)).Cast<Texture>().ToArray();
+        Text[] text = FindObjectsOfType<Text>();
 
         inputManager.SetUIButtons(rawImages, textures);
 
         pauseMenu = FindObjectsOfType<GameObject>().First(a => a.name == "PauseMenu");
+        pauseMenuText = text.First(a => a.name == "PauseMenuText");
+
         restartHighlight = rawImages.First(a => a.name == "RestartHighlight");
         exitHighlight = rawImages.First(a => a.name == "ExitHighlight");
+
+        pauseMenuText.text = "Paused";
 
         pauseMenu.SetActive(false);
         restartHighlight.enabled = false;
@@ -107,7 +115,7 @@ public class GameManager : MonoBehaviour {
             restartHighlight.enabled = true;
             exitHighlight.enabled = false;
         }
-        else
+        else if (!gameOver)
         {
             isPaused = false;
 
@@ -155,8 +163,21 @@ public class GameManager : MonoBehaviour {
         }
     }
 
-    public void GameOverToggle()
+    public void GameOverToggle(bool win)
     {
+        gameOver = true;
 
+        if (win)
+        {
+            // play win music and display 'winner'
+            pauseMenuText.text = "Winner";
+        }
+        else
+        {
+            // play game over music and display 'game over'
+            pauseMenuText.text = "Game Over";
+        }
+
+        PauseToggle();
     }
 }

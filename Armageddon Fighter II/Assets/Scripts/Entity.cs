@@ -4,9 +4,6 @@ using UnityEngine;
 
 public class Entity : MonoBehaviour {
 
-    // TODO change other.Power and other.Magic to damage in Damage/MagicDamage Methods
-    // TODO Set it so entities revert to Idle animation immidiately when hit
-
     #region Public Fields
 
     public Entity Ent { get; set; }
@@ -27,6 +24,8 @@ public class Entity : MonoBehaviour {
     protected BoxCollider[] Weapon { get; set; }
     protected BoxCollider Shield { get; set; }
     protected TrailRenderer[] WeaponTrail { get; set; }
+    protected AudioSource Audio { get; set; }
+    protected AudioClip[] SoundClip { get; set; }
 
     #region Attributes
 
@@ -82,6 +81,7 @@ public class Entity : MonoBehaviour {
     protected float StunLength { get; set; }
     public bool IsDead { get; set; }
     protected float DeathTimer { get; set; }
+    protected float ExperienceEndowment { get; set; }
 
     #endregion
 
@@ -140,7 +140,13 @@ public class Entity : MonoBehaviour {
 
             if (Health <= 0)
             {
+                if (gameObject.tag != "Player") Player.GiveExperience(ExperienceEndowment);
+
                 Death(other);
+            }
+            else
+            {
+                Audio.PlayOneShot(SoundClip[1]);
             }
         }
     }
@@ -154,11 +160,17 @@ public class Entity : MonoBehaviour {
 
         if (Health <= 0)
         {
+            if (gameObject.tag != "Player") Player.GiveExperience(ExperienceEndowment);
+
             Death(other);
+        }
+        else
+        {
+            Audio.PlayOneShot(SoundClip[1]);
         }
     }
 
-    protected void SetInitialValues()
+    protected void SetInitialValues(AudioClip[] sound)
     {
         JumpPower = 3f;
         JumpHeight = JumpPower;
@@ -186,6 +198,10 @@ public class Entity : MonoBehaviour {
         IsFallingBack = false;
         NextAttack = false;
         IsTouchingBoundary = false;
+
+        Audio = Camera.main.GetComponent<AudioSource>();
+        //SoundClip = new AudioClip[sound.Length];
+        SoundClip = sound;
 
         Anim.SetBool("Landing", false);
         Anim.SetFloat("AttackSpeed", AttackSpeed);
@@ -340,6 +356,8 @@ public class Entity : MonoBehaviour {
 
                 AttackCount = (AttackCount < MaxAttackNumber) ? ++AttackCount : 0;
                 Anim.SetInteger("AttackNumber", AttackCount);
+
+                Audio.PlayOneShot(SoundClip[0]);
             }
             else if (other.gameObject.tag == "Ground" && !Rigid.isKinematic)
             {
@@ -348,6 +366,8 @@ public class Entity : MonoBehaviour {
             }
             else if (other.gameObject.tag == "DeathBoundary")
             {
+                if (gameObject.tag != "Player") Player.GiveExperience(ExperienceEndowment * 2);
+
                 Destroy(gameObject);
             }
         }
@@ -357,6 +377,8 @@ public class Entity : MonoBehaviour {
             {
                 InAir = false;
                 Rigid.isKinematic = true;
+
+                Audio.PlayOneShot(SoundClip[2]);
             }
         }
     }
@@ -387,25 +409,22 @@ public class Entity : MonoBehaviour {
                 MoveTimer = 3;
                 
                 Anim.SetInteger("AttackNumber", AttackCount);
+
+                Audio.PlayOneShot(SoundClip[0]);
             }
         }
     }
 
     protected virtual void TriggerExit(GameObject fighter, Collider other)
     {
-        if (!IsDead)
+        if (other.gameObject.tag == "Player" && !IsKnockedDown)
         {
-            if (other.gameObject.tag == "Player" && !IsKnockedDown)
-            {
-                if (IsAttacking) SetAttacking(false);
-            }
+            if (IsAttacking) SetAttacking(false);
         }
-        else
+
+        if (other.gameObject.tag == "Ground" && Rigid.isKinematic)
         {
-            if (other.gameObject.tag == "Ground" && Rigid.isKinematic)
-            {
-                Rigid.isKinematic = false;
-            }
+            Rigid.isKinematic = false;
         }
     }
 
