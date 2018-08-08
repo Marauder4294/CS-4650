@@ -12,6 +12,7 @@ TagManager:
   - DeathBoundary
   - Boundary
   - Magic
+  - Enemy Boss
   layers:
   - Default
   - TransparentFX
